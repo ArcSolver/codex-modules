@@ -20,7 +20,7 @@
   "bugs": "https://github.com/ArcSolver/codex-modules/issues",
   "type": "module",
   "bin": {
-    "codex-mcp-manager": "./dist/cli.js"
+    "codex-mcp-manager": "dist/cli.js"
   },
   "exports": {
     ".": {

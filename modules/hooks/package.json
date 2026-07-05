@@ -20,7 +20,7 @@
   "bugs": "https://github.com/ArcSolver/codex-modules/issues",
   "type": "module",
   "bin": {
-    "codex-hooks": "./dist/cli.js"
+    "codex-hooks": "dist/cli.js"
   },
   "exports": {
     ".": {

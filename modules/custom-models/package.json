@@ -21,7 +21,7 @@
   "bugs": "https://github.com/ArcSolver/codex-modules/issues",
   "type": "module",
   "bin": {
-    "codex-custom-models": "./dist/cli.js"
+    "codex-custom-models": "dist/cli.js"
   },
   "exports": {
     ".": {
