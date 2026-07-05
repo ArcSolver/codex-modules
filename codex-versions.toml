@@ -1,0 +1,8 @@
+# Codex version pins for the verification testbed (scripts/codex-testbed.sh).
+#
+# min    = oldest supported Codex; verification against it guards the support floor.
+# latest = newest release we have verified against; bump deliberately, then run
+#          scripts/verify-all.sh — failures against the new pin are drift findings,
+#          not noise.
+min = "0.139.0"
+latest = "0.142.5"

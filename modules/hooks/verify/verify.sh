@@ -20,9 +20,10 @@ printf '#!/bin/sh\ncat >/dev/null\nprintf "{}\\n"\n' > "$HOOK_CMD"
 printf '#!/bin/sh\ncat >/dev/null\nprintf "{}\\n"\n' > "$FOREIGN_CMD"
 chmod +x "$HOOK_CMD" "$FOREIGN_CMD"
 
+# NOTE: no top-level "description" — codex 0.142.x rejects unknown top-level
+# fields in hooks.json (0.139.x accepted them). See _experiments addendum.
 cat > "$CODEX_HOME/hooks.json" <<JSON
 {
-  "description": "foreign seed",
   "hooks": {
     "SessionStart": [
       {
@@ -119,6 +120,7 @@ if command -v codex >/dev/null 2>&1; then
 import { trust, status } from "./dist/index.js";
 const before = await status({ codexHome: "$CODEX_HOME", cwds: ["$SANDBOX/work"] });
 if (before.appServerError) throw new Error(before.appServerError);
+if (before.discoveryWarnings.length > 0) throw new Error("unexpected discovery warnings: " + before.discoveryWarnings.join("; "));
 if (before.hooks.length === 0) throw new Error("hooks/list discovered no hooks");
 await trust({ codexHome: "$CODEX_HOME", cwds: ["$SANDBOX/work"] });
 const after = await status({ codexHome: "$CODEX_HOME", cwds: ["$SANDBOX/work"] });
@@ -126,6 +128,26 @@ const trusted = after.hooks.filter(h => h.trustStatus === "trusted" || h.trustSt
 if (trusted.length === 0) throw new Error("trustStatus did not become trusted");
 NODE
   pass "codex hooks/list discovery and trust"
+
+  # Drift regression: codex 0.142.x rejects unknown top-level fields in
+  # hooks.json (e.g. "description") and reports it as a discovery warning;
+  # 0.139.x still parses such files. Either way the module must not hide it.
+  BAD_HOME="$SANDBOX/bad-home"
+  mkdir -p "$BAD_HOME"
+  printf '{ "description": "legacy", "hooks": { "Stop": [ { "hooks": [{ "type": "command", "command": "/bin/echo" }] } ] } }\n' > "$BAD_HOME/hooks.json"
+  node --input-type=module <<NODE
+import { status } from "./dist/index.js";
+const s = await status({ codexHome: "$BAD_HOME", cwds: ["$SANDBOX/work"] });
+if (s.appServerError) throw new Error(s.appServerError);
+const [maj, min] = s.version?.version ?? [0, 0];
+const modern = maj > 0 || min >= 142;
+if (modern) {
+  if (s.discoveryWarnings.length === 0) throw new Error("0.142+ should surface a parse warning for unknown top-level fields");
+} else {
+  if (s.hooks.length === 0) throw new Error("pre-0.142 should still parse hooks.json with a description field");
+}
+NODE
+  pass "unknown top-level field drift is surfaced (0.142+) or tolerated (pre-0.142)"
 else
   skip "codex not found; hooks/list and trustStatus check"
 fi

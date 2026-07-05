@@ -15,6 +15,20 @@ trap 'rm -rf "$STAMP"' EXIT
 
 step() { printf '\n== %s\n' "$1"; }
 
+# CODEX_BIN pins the codex binary for this run (see scripts/codex-testbed.sh).
+# Modules resolve codex via PATH, so a shim dir covers all of them unchanged.
+if [[ -n "${CODEX_BIN:-}" ]]; then
+  [[ -x "$CODEX_BIN" ]] || { echo "CODEX_BIN is not executable: $CODEX_BIN" >&2; exit 1; }
+  mkdir -p "$STAMP/bin"
+  ln -s "$CODEX_BIN" "$STAMP/bin/codex"
+  export PATH="$STAMP/bin:$PATH"
+fi
+if command -v codex >/dev/null 2>&1; then
+  echo "codex under test: $(command -v codex) ($(codex --version))"
+else
+  echo "codex under test: none on PATH (codex-dependent checks will SKIP)"
+fi
+
 # Snapshot the real Codex home before anything runs.
 # Full content copies (not just hashes): a resident Codex app can rewrite
 # config.toml for unrelated reasons, so on mismatch we need the diff to

@@ -39,6 +39,10 @@ npm publish는 사용자가 요청할 때만 수행한다.
 
 ## 표준 검증 시퀀스 (`scripts/verify-module.sh <module-dir>`)
 
+버전 기준: 검증은 PATH의 codex가 아니라 **핀된 테스트베드 바이너리**로 한다 — `codex-versions.toml`(min=지원 하한, latest=검증 완료 최신)을 `scripts/codex-testbed.sh`가 받아 `.work/testbed/`에 캐시하고, `CODEX_BIN`으로 주입하면 verify-module.sh가 PATH shim을 깐다. 전체 매트릭스는 `scripts/verify-all.sh`. **latest 핀 bump → verify-all 실패 = 드리프트 발견**이 감지 루틴이다.
+
+auth 2레인: 기본 verify.sh는 오프라인(샌드박스 CODEX_HOME, 토큰 0). 라이브 검증(behavioral.sh)은 `RUN_LIVE=1` 옵트인으로, 실제 홈을 auth 용도로만 빌린다 — `--ignore-user-config --ephemeral` + 설정은 `-c` 주입(auth.json은 절대 복사·symlink하지 않는다: 원자적 재작성이 symlink를 일반 파일로 교체한다).
+
 1. 클린 설치(`npm install`) + 빌드
 2. `verify/verify.sh` — 샌드박스 `CODEX_HOME` 기반 기능 검증 (exit 0)
 3. `verify/behavioral.sh` (있으면) — 실기기 검증: 샌드박스 등록 후 `codex debug models`에 주입 슬러그가 `visibility: list`로 렌더링되는지, 롤백 후 소멸하는지 확인

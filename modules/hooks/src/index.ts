@@ -124,6 +124,7 @@ export type StatusResult = {
   version: CodexVersion | null;
   features: CodexFeature[];
   hooks: DiscoveredHook[];
+  discoveryWarnings: string[];
   appServerError: string | null;
   versionGate: VersionGate;
 };
@@ -340,9 +341,12 @@ export async function status(opts: CommonOptions = {}): Promise<StatusResult> {
   const version = getCodexVersion(codexBinary);
   const features = codexBinary ? safeFeatures(codexBinary) : [];
   let hooks: DiscoveredHook[] = [];
+  let discoveryWarnings: string[] = [];
   let appServerError: string | null = null;
   try {
-    hooks = await listHooks(opts);
+    const detailed = await listHooksDetailed(opts);
+    hooks = detailed.hooks;
+    discoveryWarnings = detailed.warnings;
   } catch (error) {
     appServerError = error instanceof Error ? error.message : String(error);
   }
@@ -353,6 +357,7 @@ export async function status(opts: CommonOptions = {}): Promise<StatusResult> {
     version,
     features,
     hooks,
+    discoveryWarnings,
     appServerError,
     versionGate: versionGate(version),
   };
@@ -368,6 +373,9 @@ export async function doctor(opts: CommonOptions = {}): Promise<DoctorResult> {
   else if (!hooksFeature.enabled) warnings.push("feature hooks is disabled");
   if (result.versionGate.sessionFlags === "warn") warnings.push(result.versionGate.message);
   if (result.versionGate.sessionFlags === "unknown") warnings.push(result.versionGate.message);
+  for (const warning of result.discoveryWarnings) {
+    warnings.push(`hooks discovery: ${warning}`);
+  }
   return {
     ...result,
     ok: warnings.length === 0,
@@ -388,25 +396,39 @@ export function buildExecArgs(hookSet: HookSet, opts: BuildExecArgsOptions = {})
 }
 
 async function listHooks(opts: TrustOptions = {}): Promise<DiscoveredHook[]> {
+  return (await listHooksDetailed(opts)).hooks;
+}
+
+async function listHooksDetailed(
+  opts: TrustOptions = {},
+): Promise<{ hooks: DiscoveredHook[]; warnings: string[] }> {
   const result = await appServerRequest<unknown>("hooks/list", { cwds: opts.cwds ?? [] }, {
     codexHome: opts.codexHome,
     bin: opts.bin,
     timeoutMs: 7000,
   });
-  if (Array.isArray(result)) return result as DiscoveredHook[];
+  if (Array.isArray(result)) return { hooks: result as DiscoveredHook[], warnings: [] };
   if (isPlainObject(result)) {
     for (const key of ["hooks", "items", "entries"]) {
       const value = result[key];
-      if (Array.isArray(value)) return value as DiscoveredHook[];
+      if (Array.isArray(value)) return { hooks: value as DiscoveredHook[], warnings: [] };
     }
     if (Array.isArray(result.data)) {
-      return result.data.flatMap(item => {
-        if (isPlainObject(item) && Array.isArray(item.hooks)) return item.hooks as DiscoveredHook[];
-        return [];
-      });
+      const hooks: DiscoveredHook[] = [];
+      const warnings: string[] = [];
+      for (const item of result.data) {
+        if (!isPlainObject(item)) continue;
+        if (Array.isArray(item.hooks)) hooks.push(...(item.hooks as DiscoveredHook[]));
+        if (Array.isArray(item.warnings)) {
+          for (const warning of item.warnings) {
+            if (typeof warning === "string") warnings.push(warning);
+          }
+        }
+      }
+      return { hooks, warnings };
     }
   }
-  return [];
+  return { hooks: [], warnings: [] };
 }
 
 function paths(codexHome?: string): { codexHome: string; hooksPath: string; configPath: string; manifestPath: string } {
