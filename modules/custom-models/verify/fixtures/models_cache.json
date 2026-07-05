@@ -1,0 +1,64 @@
+{
+  "fetched_at": "2026-01-01T00:00:00Z",
+  "client_version": "9.9.9",
+  "models": [
+    {
+      "slug": "gpt-5.5",
+      "display_name": "gpt-5.5",
+      "description": "Native GPT model",
+      "priority": 1,
+      "visibility": "list",
+      "base_instructions": "You are Codex, a coding agent based on GPT-5.\nUse tools carefully.",
+      "shell_type": "shell_command",
+      "supported_in_api": true,
+      "model_messages": {
+        "instructions_template": "You are Codex, a coding agent based on GPT-5."
+      },
+      "tool_mode": "code",
+      "multi_agent_version": "v2",
+      "use_responses_lite": true,
+      "supports_websockets": true,
+      "additional_speed_tiers": [
+        {
+          "id": "priority"
+        }
+      ],
+      "service_tier": "fast",
+      "service_tiers": [
+        {
+          "id": "fast"
+        }
+      ],
+      "default_service_tier": "priority",
+      "supported_reasoning_levels": [
+        {
+          "effort": "low",
+          "description": "native low"
+        },
+        {
+          "effort": "medium",
+          "description": "native medium"
+        },
+        {
+          "effort": "high",
+          "description": "native high"
+        },
+        {
+          "effort": "xhigh",
+          "description": "native xhigh"
+        }
+      ],
+      "default_reasoning_level": "medium",
+      "context_window": 272000,
+      "max_context_window": 272000,
+      "input_modalities": [
+        "text"
+      ],
+      "truncation_policy": {
+        "mode": "tokens",
+        "limit": 10000
+      },
+      "apply_patch_tool_type": "freeform"
+    }
+  ]
+}

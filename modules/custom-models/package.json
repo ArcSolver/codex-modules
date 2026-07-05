@@ -1,0 +1,30 @@
+{
+  "name": "codex-custom-models",
+  "version": "0.1.0",
+  "description": "Register Responses-API-compatible custom models in the official Codex model picker.",
+  "type": "module",
+  "bin": {
+    "codex-custom-models": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "verify": "bash verify/verify.sh"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.0",
+    "typescript": "^5.9.0"
+  }
+}
