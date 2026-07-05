@@ -16,12 +16,16 @@ trap 'rm -rf "$STAMP"' EXIT
 step() { printf '\n== %s\n' "$1"; }
 
 # Snapshot the real Codex home before anything runs.
-# models_cache.json is excluded from the hash guard: a resident Codex app
-# refreshes it on a TTL, so its hash changes for unrelated reasons.
-# Its *content* is checked at the end instead.
-if [[ -f "$REAL_HOME/config.toml" ]]; then
-  shasum "$REAL_HOME/config.toml" > "$STAMP/home-before.sha"
-fi
+# Full content copies (not just hashes): a resident Codex app can rewrite
+# config.toml for unrelated reasons, so on mismatch we need the diff to
+# judge whether the module is at fault.
+# models_cache.json is excluded from the guard: the resident app refreshes
+# it on a TTL. Its *content* is checked at the end instead.
+for f in config.toml hooks.json; do
+  if [[ -f "$REAL_HOME/$f" ]]; then
+    cp "$REAL_HOME/$f" "$STAMP/before-$f"
+  fi
+done
 
 step "clean install ($MODULE_DIR)"
 npm --prefix "$MODULE_DIR" install --no-audit --no-fund > "$STAMP/install.log" 2>&1 \
@@ -39,9 +43,18 @@ if [[ -f "$MODULE_DIR/verify/behavioral.sh" ]]; then
 fi
 
 step "real CODEX_HOME integrity"
-if [[ -f "$STAMP/home-before.sha" ]]; then
-  shasum -c "$STAMP/home-before.sha"
-fi
+for f in config.toml hooks.json; do
+  if [[ -f "$STAMP/before-$f" ]]; then
+    if ! diff -u "$STAMP/before-$f" "$REAL_HOME/$f"; then
+      echo "FAIL: real $f changed during verification (diff above)" >&2
+      exit 1
+    fi
+    echo "$f: unchanged"
+  elif [[ -f "$REAL_HOME/$f" ]]; then
+    echo "FAIL: real $f was created during verification" >&2
+    exit 1
+  fi
+done
 if [[ -f "$REAL_HOME/models_cache.json" ]]; then
   if grep -q '"fetched_at": "2000-01-01' "$REAL_HOME/models_cache.json"; then
     echo "FAIL: real models_cache.json carries the module's expired-wrapper stamp" >&2

@@ -8,13 +8,16 @@ Each module is standalone, installable, and reversible. Install a module, run it
 
 codex-modules is a collection of production-quality modules for extending and customizing the official OpenAI Codex app/CLI without turning your setup into a fork.
 
-The first module focuses on adding custom models to the Codex app's model-selection UI.
-
 ## Modules
 
 | Module | What it does | Status |
 | --- | --- | --- |
 | `custom-models` | Add any Responses-API-compatible model to the Codex app's model picker | alpha |
+| `config-kit` | Safe-editing toolkit for Codex config surfaces: atomic writes, backups, managed blocks, feature detection, app-server RPC | alpha |
+| `hooks` | Install, trust, and manage Codex lifecycle hooks — file-based or per-invocation session flags | alpha |
+| `skills` | Install, validate, convert, and manage Codex skills across all three skill roots | alpha |
+| `mcp-manager` | Register MCP servers with conflict detection, backups, advanced-key patching, and rollback | alpha |
+| `subagents` | Run parallel `codex exec` sub-agent tasks with stall detection, timeouts, and resume | alpha |
 
 ## Getting Started
 

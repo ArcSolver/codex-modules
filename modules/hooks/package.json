@@ -1,0 +1,35 @@
+{
+  "name": "codex-hooks",
+  "version": "0.1.0",
+  "description": "Safe installer, trust manager, diagnostics, and exec argv builder for Codex lifecycle hooks.",
+  "type": "module",
+  "bin": {
+    "codex-hooks": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "verify": "bash verify/verify.sh",
+    "verify:behavioral": "bash verify/behavioral.sh"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "smol-toml": "^1.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.9",
+    "typescript": "^5.8.3"
+  },
+  "license": "MIT"
+}
