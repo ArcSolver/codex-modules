@@ -1,4 +1,4 @@
-# codex-hooks
+# @codex-modules/hooks
 
 `codex-hooks` installs, removes, trusts, diagnoses, and wraps Codex lifecycle hooks.
 
@@ -8,6 +8,12 @@ It supports two backends:
 - session-flags: build `codex exec` argv fragments such as `-c hooks.SessionStart=[...]` for one invocation.
 
 ## install
+
+```bash
+npm install -g @codex-modules/hooks
+```
+
+Or from source:
 
 ```bash
 npm install

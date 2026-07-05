@@ -1,7 +1,24 @@
 {
-  "name": "codex-subagents",
+  "name": "@codex-modules/subagents",
   "version": "0.1.0",
   "description": "Artifact-first parallel subagent runner for codex exec with native multi_agent diagnostics.",
+  "keywords": [
+    "codex",
+    "openai-codex",
+    "codex-cli",
+    "subagents",
+    "multi-agent",
+    "parallel"
+  ],
+  "license": "MIT",
+  "author": "ArcSolver <hailo.dev01@gmail.com>",
+  "homepage": "https://github.com/ArcSolver/codex-modules/tree/main/modules/subagents#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ArcSolver/codex-modules.git",
+    "directory": "modules/subagents"
+  },
+  "bugs": "https://github.com/ArcSolver/codex-modules/issues",
   "type": "module",
   "bin": {
     "codex-subagents": "./dist/cli.js"
@@ -16,12 +33,16 @@
     "dist",
     "README.md"
   ],
-  "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "verify": "bash verify/verify.sh"
-  },
   "engines": {
     "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "verify": "bash verify/verify.sh",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "smol-toml": "^1.4.2"
@@ -29,6 +50,5 @@
   "devDependencies": {
     "@types/node": "^20.19.9",
     "typescript": "^5.8.3"
-  },
-  "license": "MIT"
+  }
 }

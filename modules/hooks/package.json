@@ -1,7 +1,23 @@
 {
-  "name": "codex-hooks",
+  "name": "@codex-modules/hooks",
   "version": "0.1.0",
   "description": "Safe installer, trust manager, diagnostics, and exec argv builder for Codex lifecycle hooks.",
+  "keywords": [
+    "codex",
+    "openai-codex",
+    "codex-cli",
+    "hooks",
+    "lifecycle-hooks"
+  ],
+  "license": "MIT",
+  "author": "ArcSolver <hailo.dev01@gmail.com>",
+  "homepage": "https://github.com/ArcSolver/codex-modules/tree/main/modules/hooks#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ArcSolver/codex-modules.git",
+    "directory": "modules/hooks"
+  },
+  "bugs": "https://github.com/ArcSolver/codex-modules/issues",
   "type": "module",
   "bin": {
     "codex-hooks": "./dist/cli.js"
@@ -16,13 +32,17 @@
     "dist",
     "README.md"
   ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc",
     "verify": "bash verify/verify.sh",
-    "verify:behavioral": "bash verify/behavioral.sh"
-  },
-  "engines": {
-    "node": ">=20"
+    "verify:behavioral": "bash verify/behavioral.sh",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "smol-toml": "^1.4.2"
@@ -30,6 +50,5 @@
   "devDependencies": {
     "@types/node": "^20.19.9",
     "typescript": "^5.8.3"
-  },
-  "license": "MIT"
+  }
 }

@@ -1,7 +1,23 @@
 {
-  "name": "codex-skills",
+  "name": "@codex-modules/skills",
   "version": "0.1.0",
   "description": "Install, list, remove, convert, probe, and diagnose Codex skills.",
+  "keywords": [
+    "codex",
+    "openai-codex",
+    "codex-cli",
+    "skills",
+    "agent-skills"
+  ],
+  "license": "MIT",
+  "author": "ArcSolver <hailo.dev01@gmail.com>",
+  "homepage": "https://github.com/ArcSolver/codex-modules/tree/main/modules/skills#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ArcSolver/codex-modules.git",
+    "directory": "modules/skills"
+  },
+  "bugs": "https://github.com/ArcSolver/codex-modules/issues",
   "type": "module",
   "bin": {
     "codex-skills": "./dist/cli.js"
@@ -16,12 +32,16 @@
     "dist",
     "README.md"
   ],
-  "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "verify": "bash verify/verify.sh"
-  },
   "engines": {
     "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "verify": "bash verify/verify.sh",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "smol-toml": "^1.4.2"
@@ -29,6 +49,5 @@
   "devDependencies": {
     "@types/node": "^20.19.9",
     "typescript": "^5.8.3"
-  },
-  "license": "MIT"
+  }
 }

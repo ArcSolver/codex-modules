@@ -1,4 +1,4 @@
-# codex-custom-models
+# @codex-modules/custom-models
 
 Register Responses-API-compatible model slugs in the official Codex app/CLI model picker.
 
@@ -7,7 +7,7 @@ This package writes Codex-native files under `CODEX_HOME`: a provider block in `
 ## Install
 
 ```bash
-npm install -g codex-custom-models
+npm install -g @codex-modules/custom-models
 ```
 
 For local development from this repository:
@@ -90,7 +90,7 @@ import {
   registerModels,
   removeModels,
   rollback,
-} from "codex-custom-models";
+} from "@codex-modules/custom-models";
 
 await registerModels({
   codexHome: "/tmp/codex-home",
@@ -172,7 +172,7 @@ codex-custom-models rollback
 Then remove the package:
 
 ```bash
-npm uninstall -g codex-custom-models
+npm uninstall -g @codex-modules/custom-models
 ```
 
 ## Verification

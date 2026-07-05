@@ -1,7 +1,24 @@
 {
-  "name": "codex-custom-models",
+  "name": "@codex-modules/custom-models",
   "version": "0.1.0",
   "description": "Register Responses-API-compatible custom models in the official Codex model picker.",
+  "keywords": [
+    "codex",
+    "openai-codex",
+    "codex-cli",
+    "custom-models",
+    "model-catalog",
+    "model-picker"
+  ],
+  "license": "MIT",
+  "author": "ArcSolver <hailo.dev01@gmail.com>",
+  "homepage": "https://github.com/ArcSolver/codex-modules/tree/main/modules/custom-models#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ArcSolver/codex-modules.git",
+    "directory": "modules/custom-models"
+  },
+  "bugs": "https://github.com/ArcSolver/codex-modules/issues",
   "type": "module",
   "bin": {
     "codex-custom-models": "./dist/cli.js"
@@ -19,9 +36,13 @@
   "engines": {
     "node": ">=20"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "verify": "bash verify/verify.sh"
+    "verify": "bash verify/verify.sh",
+    "prepublishOnly": "npm run build"
   },
   "devDependencies": {
     "@types/node": "^20.19.0",

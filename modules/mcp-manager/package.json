@@ -1,7 +1,23 @@
 {
-  "name": "codex-mcp-manager",
+  "name": "@codex-modules/mcp-manager",
   "version": "0.1.0",
   "description": "Safely manage Codex MCP server registrations with collision checks, backups, patches, and rollback.",
+  "keywords": [
+    "codex",
+    "openai-codex",
+    "codex-cli",
+    "mcp",
+    "model-context-protocol"
+  ],
+  "license": "MIT",
+  "author": "ArcSolver <hailo.dev01@gmail.com>",
+  "homepage": "https://github.com/ArcSolver/codex-modules/tree/main/modules/mcp-manager#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ArcSolver/codex-modules.git",
+    "directory": "modules/mcp-manager"
+  },
+  "bugs": "https://github.com/ArcSolver/codex-modules/issues",
   "type": "module",
   "bin": {
     "codex-mcp-manager": "./dist/cli.js"
@@ -16,12 +32,16 @@
     "dist",
     "README.md"
   ],
-  "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "verify": "bash verify/verify.sh"
-  },
   "engines": {
     "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "verify": "bash verify/verify.sh",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "smol-toml": "^1.4.2"
@@ -29,6 +49,5 @@
   "devDependencies": {
     "@types/node": "^20.19.9",
     "typescript": "^5.8.3"
-  },
-  "license": "MIT"
+  }
 }

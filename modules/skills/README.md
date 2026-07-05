@@ -1,8 +1,14 @@
-# codex-skills
+# @codex-modules/skills
 
 Install, list, remove, convert, probe, and diagnose local Codex skills without modifying the Codex app or CLI.
 
 ## Install
+
+```bash
+npm install -g @codex-modules/skills
+```
+
+Or from source:
 
 ```bash
 npm install
@@ -32,7 +38,7 @@ codex-skills doctor --json
 Programmatic API:
 
 ```ts
-import { installSkill, listSkills, resolveTargets, validateSkill } from "codex-skills";
+import { installSkill, listSkills, resolveTargets, validateSkill } from "@codex-modules/skills";
 
 const targets = resolveTargets({ repoRoot: process.cwd() });
 const validation = validateSkill("./my-skill");

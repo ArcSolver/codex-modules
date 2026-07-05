@@ -22,7 +22,7 @@ The manager supports stdio servers and streamable HTTP servers.
 ## Install
 
 ```sh
-npm install codex-mcp-manager
+npm install @codex-modules/mcp-manager
 ```
 
 For local development inside this repository:
@@ -105,7 +105,7 @@ import {
   removeServer,
   rollback,
   type ServerDef,
-} from "codex-mcp-manager";
+} from "@codex-modules/mcp-manager";
 
 const def: ServerDef = {
   name: "web",
@@ -161,7 +161,7 @@ comments inside the affected MCP server table are not preserved by Codex.
 Removing the npm package does not edit Codex configuration:
 
 ```sh
-npm uninstall codex-mcp-manager
+npm uninstall @codex-modules/mcp-manager
 ```
 
 To undo the last change made by this module:

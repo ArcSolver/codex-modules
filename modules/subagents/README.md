@@ -1,10 +1,16 @@
-# codex-subagents
+# @codex-modules/subagents
 
 `codex-subagents` runs multiple `codex exec` workers in parallel and stores every worker result as files. It also reports whether the local Codex binary exposes native `multi_agent` support.
 
 It does not install hooks, edit Codex config, or modify `$CODEX_HOME`.
 
 ## Install
+
+```bash
+npm install -g @codex-modules/subagents
+```
+
+Or from source:
 
 ```bash
 npm install
@@ -47,7 +53,7 @@ Outputs:
 Programmatic API:
 
 ```ts
-import { runTasks, detectNative } from "codex-subagents";
+import { runTasks, detectNative } from "@codex-modules/subagents";
 
 const native = detectNative();
 const results = await runTasks(
@@ -91,5 +97,5 @@ This package does not edit Codex settings, register MCP servers, or write to the
 If installed globally, remove it with your package manager:
 
 ```bash
-npm uninstall -g codex-subagents
+npm uninstall -g @codex-modules/subagents
 ```

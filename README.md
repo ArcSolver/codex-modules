@@ -10,16 +10,20 @@ codex-modules is a collection of production-quality modules for extending and cu
 
 ## Modules
 
-| Module | What it does | Status |
-| --- | --- | --- |
-| `custom-models` | Add any Responses-API-compatible model to the Codex app's model picker | alpha |
-| `config-kit` | Safe-editing toolkit for Codex config surfaces: atomic writes, backups, managed blocks, feature detection, app-server RPC | alpha |
-| `hooks` | Install, trust, and manage Codex lifecycle hooks — file-based or per-invocation session flags | alpha |
-| `skills` | Install, validate, convert, and manage Codex skills across all three skill roots | alpha |
-| `mcp-manager` | Register MCP servers with conflict detection, backups, advanced-key patching, and rollback | alpha |
-| `subagents` | Run parallel `codex exec` sub-agent tasks with stall detection, timeouts, and resume | alpha |
+| Module | npm | What it does | Status |
+| --- | --- | --- | --- |
+| `custom-models` | `@codex-modules/custom-models` | Add any Responses-API-compatible model to the Codex app's model picker | alpha |
+| `config-kit` | `@codex-modules/config-kit` | Safe-editing toolkit for Codex config surfaces: atomic writes, backups, managed blocks, feature detection, app-server RPC | alpha |
+| `hooks` | `@codex-modules/hooks` | Install, trust, and manage Codex lifecycle hooks — file-based or per-invocation session flags | alpha |
+| `skills` | `@codex-modules/skills` | Install, validate, convert, and manage Codex skills across all three skill roots | alpha |
+| `mcp-manager` | `@codex-modules/mcp-manager` | Register MCP servers with conflict detection, backups, advanced-key patching, and rollback | alpha |
+| `subagents` | `@codex-modules/subagents` | Run parallel `codex exec` sub-agent tasks with stall detection, timeouts, and resume | alpha |
 
 ## Getting Started
+
+```bash
+npm install -g @codex-modules/<name>
+```
 
 Each module has its own README with installation, usage, verification, and rollback instructions.
 

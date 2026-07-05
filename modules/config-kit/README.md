@@ -1,4 +1,4 @@
-# codex-config-kit
+# @codex-modules/config-kit
 
 Safe utilities for reading and editing Codex configuration surfaces.
 
@@ -10,7 +10,7 @@ the caller to roll changes back.
 ## Install
 
 ```sh
-npm install codex-config-kit
+npm install @codex-modules/config-kit
 ```
 
 For local development inside this module:
@@ -39,7 +39,7 @@ import {
   insertUnderTomlTable,
   spliceManagedBlock,
   writeFileAtomic,
-} from "codex-config-kit";
+} from "@codex-modules/config-kit";
 
 const backup = backupFile(configPath);
 const next = spliceManagedBlock(current, "codex-example", "settings", "enabled = true");
