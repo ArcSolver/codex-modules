@@ -1,0 +1,32 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  verify-matrix:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Cache Codex testbed
+        uses: actions/cache@v4
+        with:
+          path: .work/testbed
+          key: ${{ runner.os }}-codex-testbed-${{ hashFiles('codex-versions.toml') }}
+
+      - name: Prepare Codex home
+        run: mkdir -p ~/.codex
+
+      - name: Verify module matrix
+        run: bash scripts/verify-all.sh -v "min latest"

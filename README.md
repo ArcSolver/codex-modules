@@ -21,13 +21,72 @@ codex-modules is a collection of production-quality modules for extending and cu
 
 ## Getting Started
 
+Install the hooks module and try a sandboxed Codex home. This example creates a
+real hookset, applies it to a temporary `$CODEX_HOME`, and checks status without
+touching your real Codex settings.
+
 ```bash
-npm install -g @codex-modules/<name>
+npm install -g @codex-modules/hooks
+
+SANDBOX_CODEX_HOME="$(mktemp -d)"
+HOOK_SCRIPT="$SANDBOX_CODEX_HOME/lifecycle-notify.sh"
+
+cat > "$HOOK_SCRIPT" <<'SH'
+#!/usr/bin/env bash
+echo "codex lifecycle hook fired" >> "$CODEX_HOME/hook.log"
+SH
+chmod +x "$HOOK_SCRIPT"
+
+cat > hookset.json <<JSON
+{
+  "SessionStart": [
+    {
+      "matcher": "startup|resume",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "$HOOK_SCRIPT",
+          "timeout": 5,
+          "statusMessage": "Starting Codex session"
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "$HOOK_SCRIPT",
+          "timeout": 5
+        }
+      ]
+    }
+  ]
+}
+JSON
+
+codex-hooks plan --hooks hookset.json --codex-home "$SANDBOX_CODEX_HOME"
+codex-hooks apply --hooks hookset.json --codex-home "$SANDBOX_CODEX_HOME"
+codex-hooks status --codex-home "$SANDBOX_CODEX_HOME"
 ```
 
 Each module has its own README with installation, usage, verification, and rollback instructions.
 
 Start with the module README under `modules/<name>/`.
+
+Modules can also be combined. For example, use `subagents` to run two read-only
+`codex exec` investigations in parallel, while `hooks` manages lifecycle
+notifications for the sandboxed Codex home used by that run:
+
+```bash
+cat > tasks.jsonl <<'JSONL'
+{"id":"entry-points","prompt":"Inspect this repo and summarize likely entry points. Do not edit files.","cwd":".","sandbox":"read-only"}
+{"id":"test-gaps","prompt":"Inspect this repo and summarize test coverage gaps. Do not edit files.","cwd":".","sandbox":"read-only"}
+JSONL
+
+codex-subagents run --tasks tasks.jsonl --out .work/subagents/quick-start --parallel 2 --timeout 600 --stall 180 --codex-home "$SANDBOX_CODEX_HOME"
+```
 
 ## Design Principles
 

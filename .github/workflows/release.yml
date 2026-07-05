@@ -1,0 +1,59 @@
+name: Release module
+
+on:
+  workflow_dispatch:
+    inputs:
+      module:
+        description: Module to publish
+        required: true
+        type: choice
+        options:
+          - config-kit
+          - hooks
+          - skills
+          - mcp-manager
+          - subagents
+          - custom-models
+      version:
+        description: Confirm the package.json version to publish
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish ${{ inputs.module }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Install latest npm
+        run: npm install -g npm@latest
+
+      - name: Verify requested version
+        env:
+          EXPECTED_VERSION: ${{ inputs.version }}
+        run: |
+          package_version="$(node -p "require('./modules/${{ inputs.module }}/package.json').version")"
+          if [ "$package_version" != "$EXPECTED_VERSION" ]; then
+            echo "Input version '$EXPECTED_VERSION' does not match modules/${{ inputs.module }}/package.json version '$package_version'."
+            exit 1
+          fi
+
+      - name: Verify module
+        run: bash scripts/verify-all.sh -v "min latest" "${{ inputs.module }}"
+
+      - name: Publish package
+        working-directory: modules/${{ inputs.module }}
+        run: npm publish

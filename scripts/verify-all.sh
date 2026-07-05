@@ -16,6 +16,11 @@ if [[ ${#MODULES[@]} -eq 0 ]]; then
   MODULES=($(cd "$REPO_ROOT/modules" && ls -d */ | tr -d '/'))
 fi
 
+if ! bash "$REPO_ROOT/scripts/check-kit-sync.sh"; then
+  echo "config-kit vendor sync check failed; aborting matrix" >&2
+  exit 1
+fi
+
 declare -a RESULTS=()
 FAIL=0
 for ver in $VERSIONS; do

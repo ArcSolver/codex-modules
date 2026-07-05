@@ -4,7 +4,7 @@
 #
 # Usage:
 #   scripts/codex-testbed.sh <version|min|latest>   # ensure cached, print binary path
-#   scripts/codex-testbed.sh check-latest           # print newest upstream release version
+#   scripts/codex-testbed.sh check-latest           # print recent upstream versions, newest first
 #
 # Pins live in codex-versions.toml. Binaries are cached under .work/testbed/
 # (gitignored) — nothing heavy is ever committed.
@@ -18,8 +18,10 @@ pin() { sed -n "s/^$1 = \"\(.*\)\"/\1/p" "$PINS"; }
 
 case "${1:?usage: codex-testbed.sh <version|min|latest|check-latest>}" in
   check-latest)
+    # Full list, newest first — consumers filter (e.g. drift check picks the
+    # first stable line, which head -1 would hide behind a newer prerelease).
     gh release list -R openai/codex --limit 15 --json tagName -q '.[].tagName' \
-      | sed -n 's/^rust-v//p' | head -1
+      | sed -n 's/^rust-v//p'
     exit 0
     ;;
   min|latest) VER="$(pin "$1")" ;;
