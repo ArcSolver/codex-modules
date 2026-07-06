@@ -1,0 +1,54 @@
+{
+  "name": "@codex-modules/lsp-sidecar",
+  "version": "0.1.0",
+  "description": "Stdio MCP sidecar that exposes local LSP diagnostics and navigation tools to Codex.",
+  "keywords": [
+    "codex",
+    "openai-codex",
+    "mcp",
+    "lsp",
+    "language-server"
+  ],
+  "license": "MIT",
+  "author": "ArcSolver <hailo.dev01@gmail.com>",
+  "homepage": "https://github.com/ArcSolver/codex-modules/tree/main/modules/lsp-sidecar#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ArcSolver/codex-modules.git",
+    "directory": "modules/lsp-sidecar"
+  },
+  "bugs": "https://github.com/ArcSolver/codex-modules/issues",
+  "type": "module",
+  "bin": {
+    "codex-lsp-sidecar": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "verify": "bash verify/verify.sh",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.19.9",
+    "typescript": "^5.8.3",
+    "typescript-language-server": "^4.4.1"
+  }
+}

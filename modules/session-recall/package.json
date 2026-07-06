@@ -1,0 +1,56 @@
+{
+  "name": "@codex-modules/session-recall",
+  "version": "0.1.0",
+  "description": "Local SQLite FTS recall for Codex transcript sessions.",
+  "keywords": [
+    "codex",
+    "openai-codex",
+    "codex-cli",
+    "sessions",
+    "recall",
+    "fts5"
+  ],
+  "license": "MIT",
+  "author": "ArcSolver <hailo.dev01@gmail.com>",
+  "homepage": "https://github.com/ArcSolver/codex-modules/tree/main/modules/session-recall#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ArcSolver/codex-modules.git",
+    "directory": "modules/session-recall"
+  },
+  "bugs": "https://github.com/ArcSolver/codex-modules/issues",
+  "type": "module",
+  "bin": {
+    "codex-session-recall": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "verify": "bash verify/verify.sh",
+    "verify:behavioral": "bash verify/behavioral.sh",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.2.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^20.19.9",
+    "typescript": "^5.8.3"
+  }
+}

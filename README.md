@@ -18,6 +18,9 @@ codex-modules is a collection of production-quality modules for extending and cu
 | `skills` | `@codex-modules/skills` | Install, validate, convert, and manage Codex skills across all three skill roots | alpha |
 | `mcp-manager` | `@codex-modules/mcp-manager` | Register MCP servers with conflict detection, backups, advanced-key patching, and rollback | alpha |
 | `subagents` | `@codex-modules/subagents` | Run parallel `codex exec` sub-agent tasks with stall detection, timeouts, and resume | alpha |
+| `session-recall` | `@codex-modules/session-recall` | Search past Codex sessions locally: SQLite FTS index over transcripts with anchored context windows | alpha |
+| `lsp-sidecar` | `@codex-modules/lsp-sidecar` | Give Codex code intelligence via MCP: LSP diagnostics, definition, hover, and workspace symbols | alpha |
+| `scheduler` | `@codex-modules/scheduler` | Schedule safe, opt-in `codex exec` jobs with cron/interval parsing, wake gates, and dry-run defaults | alpha |
 
 ## Getting Started
 

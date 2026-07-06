@@ -1,0 +1,54 @@
+{
+  "name": "@codex-modules/scheduler",
+  "version": "0.1.0",
+  "description": "Dependency-free scheduled runner for safe, opt-in Codex exec jobs.",
+  "keywords": [
+    "codex",
+    "openai-codex",
+    "scheduler",
+    "cron",
+    "automation"
+  ],
+  "license": "MIT",
+  "author": "ArcSolver <hailo.dev01@gmail.com>",
+  "homepage": "https://github.com/ArcSolver/codex-modules/tree/main/modules/scheduler#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ArcSolver/codex-modules.git",
+    "directory": "modules/scheduler"
+  },
+  "bugs": "https://github.com/ArcSolver/codex-modules/issues",
+  "type": "module",
+  "bin": {
+    "codex-scheduler": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "verify": "bash verify/verify.sh",
+    "verify:behavioral": "bash verify/behavioral.sh",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.19.9",
+    "typescript": "^5.8.3"
+  }
+}
