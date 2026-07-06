@@ -35,7 +35,7 @@
     "CHANGELOG.md"
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">=24.0.0"
   },
   "publishConfig": {
     "access": "public"
@@ -47,7 +47,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@types/node": "^20.19.9",
+    "@types/node": "^24.0.0",
     "typescript": "^5.8.3",
     "typescript-language-server": "^4.4.1"
   }

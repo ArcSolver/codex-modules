@@ -19,7 +19,7 @@ npm install
 npm run build
 ```
 
-이 package는 native runtime dependency인 `better-sqlite3`를 사용합니다. 설치에 실패하면 Node version이 `>=20`을 만족하는지, 그리고 platform에서 prebuilt package를 설치하거나 native addon을 compile할 수 있는지 확인하세요.
+이 package는 native runtime dependency인 `better-sqlite3`를 사용합니다. 설치에 실패하면 Node version이 `>=24`를 만족하는지, 그리고 platform에서 prebuilt package를 설치하거나 native addon을 compile할 수 있는지 확인하세요.
 
 ## 사용법
 

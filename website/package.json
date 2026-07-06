@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
     "sync:docs": "node scripts/sync-docs.mjs",
     "prebuild": "npm run sync:docs",

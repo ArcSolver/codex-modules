@@ -4,7 +4,9 @@ All notable changes to this module are documented here.
 
 ## [Unreleased]
 
-- No changes yet.
+### Changed
+
+- Raised the minimum supported Node.js version to `>=24` (current Active LTS); Node 20 reached end-of-life in April 2026.
 
 ## [0.1.0] - 2026-07-06
 

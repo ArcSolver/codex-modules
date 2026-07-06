@@ -19,7 +19,7 @@ npm install
 npm run build
 ```
 
-This package uses `better-sqlite3`, a native runtime dependency. If install fails, confirm that your Node version satisfies `>=20` and that your platform can install the prebuilt package or compile native addons.
+This package uses `better-sqlite3`, a native runtime dependency. If install fails, confirm that your Node version satisfies `>=24` and that your platform can install the prebuilt package or compile native addons.
 
 ## usage
 

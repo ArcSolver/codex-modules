@@ -12,7 +12,7 @@
 
 - `README.md`: install, usage, how it works, Attribution, uninstall-rollback 섹션을 포함한다.
 - `package.json`: npm 패키지 메타데이터, scripts, bin 또는 exports를 명시한다.
-- `src/`: TypeScript로 작성하며 Node >= 20에서 동작해야 한다.
+- `src/`: TypeScript로 작성하며 Node >= 24(현행 Active LTS)에서 동작해야 한다.
 - `verify/`: 실행 가능한 검증 스크립트를 둔다. 검증은 모듈이 의도대로 동작함을 자동으로 증명해야 한다.
   - `verify/verify.sh`: 샌드박스 기반 기능 검증 (필수). 비대화형으로 실행되고 실패 시 non-zero로 종료해야 한다.
   - `verify/behavioral.sh`: 실기기 행동 검증 (해당되는 모듈만). 실제 codex CLI가 모듈의 효과를 인식하는지 확인한다. 대상 CLI가 없으면 `SKIP` 출력 후 exit 0.
