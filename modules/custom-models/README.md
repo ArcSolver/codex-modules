@@ -1,3 +1,5 @@
+<p align="right">English | <a href="README.ko.md">한국어</a></p>
+
 # @codex-modules/custom-models
 
 Register Responses-API-compatible model slugs in the official Codex app/CLI model picker.

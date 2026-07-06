@@ -1,3 +1,5 @@
+<p align="right">English | <a href="README.ko.md">한국어</a></p>
+
 # @codex-modules/scheduler
 
 `codex-scheduler` stores scheduled local jobs and runs them on demand from a user-level tick command. It is dry-run by default: `tick` and `run` do not execute scripts or Codex unless `--execute` is provided, and Codex jobs additionally require `--allow-codex`.

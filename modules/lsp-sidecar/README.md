@@ -1,3 +1,5 @@
+<p align="right">English | <a href="README.ko.md">한국어</a></p>
+
 # @codex-modules/lsp-sidecar
 
 `codex-lsp-sidecar` runs a stdio MCP server that gives Codex four local language-server tools:

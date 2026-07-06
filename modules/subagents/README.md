@@ -1,3 +1,5 @@
+<p align="right">English | <a href="README.ko.md">한국어</a></p>
+
 # @codex-modules/subagents
 
 `codex-subagents` runs multiple `codex exec` workers in parallel and stores every worker result as files. It also reports whether the local Codex binary exposes native `multi_agent` support.

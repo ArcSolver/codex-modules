@@ -1,3 +1,5 @@
+<p align="right">English | <a href="README.ko.md">한국어</a></p>
+
 # @codex-modules/hooks
 
 `codex-hooks` installs, removes, trusts, diagnoses, and wraps Codex lifecycle hooks.

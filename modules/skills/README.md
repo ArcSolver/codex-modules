@@ -1,3 +1,5 @@
+<p align="right">English | <a href="README.ko.md">한국어</a></p>
+
 # @codex-modules/skills
 
 Install, list, remove, convert, probe, and diagnose local Codex skills without modifying the Codex app or CLI.

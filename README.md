@@ -1,3 +1,5 @@
+<p align="right">English | <a href="README.ko.md">한국어</a></p>
+
 # codex-modules
 
 Small, self-contained modules that make the official OpenAI Codex app/CLI truly yours.

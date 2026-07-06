@@ -1,3 +1,5 @@
+<p align="right">English | <a href="README.ko.md">한국어</a></p>
+
 # @codex-modules/config-kit
 
 Safe utilities for reading and editing Codex configuration surfaces.

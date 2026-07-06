@@ -1,3 +1,5 @@
+<p align="right">English | <a href="README.ko.md">한국어</a></p>
+
 # MCP Manager
 
 Safely manage Codex MCP server registrations with collision checks, backups,

@@ -1,3 +1,5 @@
+<p align="right">English | <a href="README.ko.md">한국어</a></p>
+
 # @codex-modules/session-recall
 
 `codex-session-recall` indexes Codex transcript JSONL into a module-owned SQLite database, then searches old sessions with FTS5, lineage-aware dedupe, anchored windows, and read/around views.

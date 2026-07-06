@@ -28,5 +28,8 @@ jobs:
       - name: Prepare Codex home
         run: mkdir -p ~/.codex
 
+      - name: Check translation sync (warn only)
+        run: bash scripts/check-docs-sync.sh
+
       - name: Verify module matrix
         run: bash scripts/verify-all.sh -v "min latest"
