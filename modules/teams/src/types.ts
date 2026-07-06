@@ -100,5 +100,6 @@ export type DoctorReport = {
   models: { ok: boolean; values: string[]; error?: string };
   agentsDirWritable: boolean;
   stateDirWritable: boolean;
-  installedTeams: string[];
+  userInstalledTeams: string[];
+  projectInstalledTeams: string[];
 };

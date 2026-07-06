@@ -13,6 +13,7 @@ import { dirname, join, resolve } from "node:path";
 import type { FinishStatus, JournalEntry, JournalKind, StateFile, TaskRecord, TasksFile } from "./types.js";
 import { TEAM_NAME_RE, MEMBER_NAME_RE } from "./team.js";
 import { withLock } from "./lock.js";
+import { assertConfinedRoot } from "./paths.js";
 
 export type StateOptions = {
   cwd?: string;
@@ -24,7 +25,8 @@ export function resolveStateRoot(opts: StateOptions = {}): string {
   const envRoot = opts.env?.CODEX_TEAMS_STATE_DIR;
   if (opts.stateDir) return resolve(opts.stateDir);
   if (envRoot) return resolve(envRoot);
-  return resolve(opts.cwd ?? process.cwd(), ".codex-teams");
+  const projectRoot = resolve(opts.cwd ?? process.cwd());
+  return assertConfinedRoot(join(projectRoot, ".codex-teams"), projectRoot);
 }
 
 export function teamDir(team: string, opts: StateOptions = {}): string {

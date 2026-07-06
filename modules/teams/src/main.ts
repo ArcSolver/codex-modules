@@ -87,6 +87,7 @@ async function run(args: string[]): Promise<void> {
     const team = parsed.positional[0];
     if (!team) throw new Error("usage: codex-teams uninstall <team-name>");
     const result = uninstallTeam(team, { codexHome: flag(parsed, "codex-home"), scope: scopeFlag(parsed) });
+    for (const warning of result.warnings) console.error(`WARN ${warning}`);
     console.log(`OK uninstall ${result.team} removed=${result.removed.length} restored=${result.restored.length}`);
     return;
   }
@@ -126,6 +127,7 @@ async function run(args: string[]): Promise<void> {
       stateDir: flag(parsed, "state-dir"),
       sandbox: sandboxFlag(parsed),
       timeoutSec: numberFlag(parsed, "timeout-sec"),
+      stallSec: numberFlag(parsed, "stall-sec"),
       execute: boolFlag(parsed, "execute"),
       allowCodex: boolFlag(parsed, "allow-codex"),
     });
@@ -250,6 +252,29 @@ function handleNote(args: string[]): void {
 function parseArgs(args: string[]): ParsedArgs {
   const positional: string[] = [];
   const flags = new Map<string, string | true>();
+  const valueFlags = new Set([
+    "actor",
+    "agent-id",
+    "codex-home",
+    "depends-on",
+    "detail",
+    "goal",
+    "kind",
+    "lease-sec",
+    "model",
+    "nickname",
+    "out",
+    "preset",
+    "result",
+    "sandbox",
+    "scope",
+    "stall-sec",
+    "state-dir",
+    "status",
+    "text",
+    "timeout-sec",
+    "title",
+  ]);
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]!;
     if (arg === "--") {
@@ -264,7 +289,8 @@ function parseArgs(args: string[]): ParsedArgs {
       }
       const name = arg.slice(2);
       const next = args[i + 1];
-      if (next && !next.startsWith("-")) {
+      if (valueFlags.has(name)) {
+        if (next === undefined) throw new Error(`--${name} requires a value`);
         flags.set(name, next);
         i++;
       } else {
@@ -347,7 +373,7 @@ Usage:
   codex-teams uninstall <team-name> [--codex-home <dir>] [--scope user|project]
   codex-teams leader-prompt <team.json> --goal <text>
   codex-teams skill install|uninstall [--codex-home <dir>]
-  codex-teams run <team.json> --goal <text> [--execute --allow-codex] [-s workspace-write] [--timeout-sec N]
+  codex-teams run <team.json> --goal <text> [--execute --allow-codex] [-s workspace-write] [--timeout-sec N] [--stall-sec N]
   codex-teams state init|show|finish <team>
   codex-teams member bind <team> <member> --agent-id <id>
   codex-teams task add|claim|complete|fail|list <team>

@@ -83,7 +83,7 @@ codex-teams run team.json --goal "Review this change"
 codex-teams run team.json --goal "Review this change" --execute --allow-codex
 ```
 
-실행 runner는 기본적으로 `codex exec -s workspace-write --skip-git-repo-check --json --ephemeral`을 사용하고, run artifact를 `.codex-teams/<team>/runs/` 아래에 남기며, 위험한 sandbox bypass 문구를 거부합니다.
+실행 runner는 기본적으로 `codex exec -s workspace-write --skip-git-repo-check --json --ephemeral`을 사용하고 run artifact를 `.codex-teams/<team>/runs/` 아래에 남깁니다. runner는 `read-only` 또는 `workspace-write` sandbox만 허용하고, danger-access flag를 전달하지 않으며, 조립된 prompt를 `codex exec`의 단일 positional 인자로만 넘깁니다.
 
 선택적 Codex skill을 설치합니다:
 
@@ -104,7 +104,7 @@ Install은 각 member를 다음 필드가 있는 TOML로 렌더합니다:
 - `nickname_candidates`
 - `developer_instructions`
 
-모든 TOML string은 basic string으로 렌더되어 따옴표, 백슬래시, 개행이 escape됩니다. `nickname_candidates`는 string array로 렌더됩니다.
+모든 TOML string은 basic string으로 렌더되어 따옴표, 백슬래시, 개행, TOML 제어문자가 escape됩니다. `nickname_candidates`는 string array로 렌더됩니다.
 
 기존 unmanaged file은 `--force` 없이는 절대 덮어쓰지 않습니다. `--force`를 사용한 overwrite는 먼저 backup을 만듭니다. Uninstall은 선택한 target root의 manifest에 기록된 파일만 건드립니다.
 
@@ -124,13 +124,13 @@ Install은 각 member를 다음 필드가 있는 TOML로 렌더합니다:
 
 상태 CLI는 리더 또는 사람이 호출하는 표면입니다. 멤버는 마지막 `TEAM-RESULT: <one-line summary>` 줄로 보고합니다. Workspace-write 멤버는 선택적으로 artifact를 남길 수 있지만, canonical 결과 채널은 final message입니다.
 
-`doctor`는 Codex binary, version, native feature state, model catalog availability, write access, installed teams를 보고합니다. 건강한 native workflow에는 `multi_agent`가 stable and enabled여야 합니다. `enable_fanout`과 `multi_agent_v2`는 under-development surface로만 보고합니다.
+`doctor`는 Codex binary, version, native feature state, model catalog availability, write access, installed teams를 user/project scope로 나눠 보고합니다. 건강한 native workflow에는 `multi_agent`가 stable and enabled여야 합니다. `enable_fanout`과 `multi_agent_v2`는 under-development surface로만 보고합니다.
+
+이 package는 runtime dependency가 없습니다. package root는 team parsing, install/uninstall, doctor, prompt/run planning, durable state/task/note operation을 위한 지원 대상 high-level helper만 export합니다.
 
 ## Attribution
 
 No third-party code is included; the state protocol is an original clean-room design.
-
-이 module은 이 repository의 `modules/config-kit/src/`에서 adapted된 local kit utility를 vendor합니다. Vendored source file에는 `// Adapted from modules/config-kit/src/<file>.ts` comment가 있습니다.
 
 ## 제거와 롤백
 

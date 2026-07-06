@@ -18,6 +18,7 @@ import { assembleDeveloperInstructions } from "./prompt.js";
 import { memberAgentName, parseTeamJson, resolveMemberModel, resolveMemberSandbox } from "./team.js";
 import { renderToml } from "./toml.js";
 import { nowIso, readJson, writeFileAtomic, writeJsonAtomic } from "./state.js";
+import { assertConfinedRoot, isConfinedPath } from "./paths.js";
 
 export type InstallOptions = {
   codexHome?: string;
@@ -33,6 +34,7 @@ export type InstallResult = {
   scope: InstallScope;
   targetRoot: string;
   files: string[];
+  removed: string[];
   warnings: string[];
 };
 
@@ -42,6 +44,7 @@ export type UninstallResult = {
   targetRoot: string;
   removed: string[];
   restored: string[];
+  warnings: string[];
 };
 
 export function installTeam(teamPath: string, opts: InstallOptions = {}): InstallResult {
@@ -53,21 +56,45 @@ export function installTeamDef(team: TeamDef, opts: InstallOptions = {}): Instal
   const scope = opts.scope ?? "user";
   const targetRoot = resolveAgentsRoot(scope, opts);
   mkdirSync(targetRoot, { recursive: true });
+  if (scope === "project") assertProjectRoot(targetRoot, opts);
   const warnings: string[] = [];
+  const removed: string[] = [];
   if (scope === "project") {
     warnings.push("project scope requires a trusted Codex project; config.toml is not modified automatically");
   }
   if (!opts.skipModelCheck) warnings.push(...checkModels(team, opts));
 
-  const manifest = readManifest(targetRoot);
+  const manifest = readManifest(targetRoot, warnings);
   const installedAt = nowIso(opts.env);
+  const newMembers = new Set(team.members.map(member => member.name));
+  const oldTeamEntries = manifest.entries.filter(entry => entry.team === team.name && entry.kind === "agent");
   const nextEntries = manifest.entries.filter(entry => !(entry.team === team.name && entry.kind === "agent"));
   const files: string[] = [];
+
+  for (const entry of oldTeamEntries) {
+    if (entry.member && newMembers.has(entry.member)) continue;
+    const unsafeReason = validateManagedEntry(entry, targetRoot, scope);
+    if (unsafeReason) {
+      warnings.push(`skipping stale cleanup for ${entry.file}: ${unsafeReason}`);
+      nextEntries.push(entry);
+      continue;
+    }
+    if (!existsSync(entry.file)) continue;
+    const currentHash = sha256(readFileSync(entry.file, "utf8"));
+    if (currentHash !== entry.hash) {
+      warnings.push(`stale managed agent changed since install; leaving in place: ${entry.file}`);
+      nextEntries.push(entry);
+      continue;
+    }
+    rmSync(entry.file, { force: true });
+    removed.push(entry.file);
+    warnings.push(`removed stale managed agent file: ${entry.file}`);
+  }
 
   for (const member of team.members) {
     const file = join(targetRoot, `${memberAgentName(team, member)}.toml`);
     const content = renderAgentToml(team, member.name);
-    const existing = manifest.entries.find(entry => entry.file === file && entry.kind === "agent");
+    const existing = manifest.entries.find(entry => entry.file === file && entry.kind === "agent" && entry.scope === scope);
     let backup: string | null = existing?.backup ?? null;
     if (existsSync(file) && !existing) {
       if (!opts.force) throw new Error(`refusing to overwrite unmanaged agent file: ${file} (use --force to back it up first)`);
@@ -88,19 +115,26 @@ export function installTeamDef(team: TeamDef, opts: InstallOptions = {}): Instal
   }
 
   writeManifest(targetRoot, { ...manifest, entries: nextEntries });
-  return { team: team.name, scope, targetRoot, files, warnings };
+  return { team: team.name, scope, targetRoot, files, removed, warnings };
 }
 
 export function uninstallTeam(team: string, opts: InstallOptions = {}): UninstallResult {
   const scope = opts.scope ?? "user";
   const targetRoot = resolveAgentsRoot(scope, opts);
-  const manifest = readManifest(targetRoot);
+  const warnings: string[] = [];
+  const manifest = readManifest(targetRoot, warnings);
   const removed: string[] = [];
   const restored: string[] = [];
   const keep: ManifestEntry[] = [];
 
   for (const entry of manifest.entries) {
     if (entry.team !== team || entry.kind !== "agent") {
+      keep.push(entry);
+      continue;
+    }
+    const unsafeReason = validateManagedEntry(entry, targetRoot, scope);
+    if (unsafeReason) {
+      warnings.push(`skipping manifest entry for ${entry.file}: ${unsafeReason}`);
       keep.push(entry);
       continue;
     }
@@ -117,7 +151,7 @@ export function uninstallTeam(team: string, opts: InstallOptions = {}): Uninstal
   }
 
   writeManifest(targetRoot, { ...manifest, entries: keep });
-  return { team, scope, targetRoot, removed, restored };
+  return { team, scope, targetRoot, removed, restored, warnings };
 }
 
 export function renderAgentToml(team: TeamDef, memberName: string): string {
@@ -139,7 +173,10 @@ export function resolveCodexHome(env: NodeJS.ProcessEnv | Record<string, string 
 }
 
 export function resolveAgentsRoot(scope: InstallScope, opts: InstallOptions = {}): string {
-  if (scope === "project") return resolve(opts.cwd ?? process.cwd(), ".codex", "agents");
+  if (scope === "project") {
+    const projectRoot = realProjectRoot(opts.cwd ?? process.cwd());
+    return assertConfinedRoot(join(projectRoot, ".codex", "agents"), projectRoot);
+  }
   return join(resolveCodexHome(opts.env, opts.codexHome), "agents");
 }
 
@@ -147,14 +184,14 @@ export function manifestPath(targetRoot: string): string {
   return join(targetRoot, ".codex-teams-manifest.json");
 }
 
-export function readManifest(targetRoot: string): TeamsManifest {
+export function readManifest(targetRoot: string, warnings: string[] = []): TeamsManifest {
   const path = manifestPath(targetRoot);
   if (!existsSync(path)) return { version: 1, owner: "@codex-modules/teams", entries: [] };
   const manifest = readJson<TeamsManifest>(path);
   if (manifest.version !== 1 || manifest.owner !== "@codex-modules/teams" || !Array.isArray(manifest.entries)) {
     throw new Error(`unsupported teams manifest format: ${path}`);
   }
-  return manifest;
+  return { ...manifest, entries: manifest.entries.flatMap((entry, index) => validateManifestEntry(entry, `${path} entries[${index}]`, warnings)) };
 }
 
 export function writeManifest(targetRoot: string, manifest: TeamsManifest): void {
@@ -199,7 +236,13 @@ function checkModels(team: TeamDef, opts: InstallOptions): string[] {
     const reason = result.error ? result.error.message : result.stderr.trim();
     return [`codex debug models unavailable; continuing without strict model preflight${reason ? ` (${reason})` : ""}`];
   }
-  const catalog = parseModelCatalog(result.stdout);
+  let catalog: string[];
+  try {
+    catalog = parseModelCatalog(result.stdout);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    return [`codex debug models returned non-JSON catalog; continuing without strict model preflight (${reason})`];
+  }
   if (catalog.length === 0) return ["codex debug models returned no parseable catalog entries; continuing"];
   const available = new Set(catalog);
   for (const member of team.members) {
@@ -209,12 +252,16 @@ function checkModels(team: TeamDef, opts: InstallOptions): string[] {
   return warnings;
 }
 
-function parseModelCatalog(stdout: string): string[] {
+export function parseModelCatalog(stdout: string): string[] {
+  const parsed = JSON.parse(stdout) as unknown;
+  if (!isRecord(parsed) || !Array.isArray(parsed.models)) return [];
   const values = new Set<string>();
-  for (const line of stdout.split(/\r?\n/)) {
-    for (const match of line.matchAll(/\b(?:gpt|o)[A-Za-z0-9_.:-]+\b/g)) values.add(match[0]);
+  for (const item of parsed.models) {
+    if (!isRecord(item)) continue;
+    const value = typeof item.slug === "string" ? item.slug : typeof item.id === "string" ? item.id : null;
+    if (value) values.add(value);
   }
-  return [...values];
+  return [...values].sort();
 }
 
 function backupFile(file: string, backupDir: string): string {
@@ -235,4 +282,48 @@ export function backupSkillFile(file: string, backupDir: string): string {
 
 function sha256(content: string): string {
   return createHash("sha256").update(content).digest("hex");
+}
+
+function assertProjectRoot(targetRoot: string, opts: InstallOptions): void {
+  assertConfinedRoot(targetRoot, realProjectRoot(opts.cwd ?? process.cwd()));
+}
+
+function realProjectRoot(cwd: string): string {
+  return statSync(resolve(cwd)).isDirectory() ? resolve(cwd) : dirname(resolve(cwd));
+}
+
+function validateManagedEntry(entry: ManifestEntry, targetRoot: string, scope: InstallScope): string | null {
+  if (entry.scope !== scope) return `scope ${entry.scope} does not match ${scope}`;
+  if (!entry.member) return "agent entry is missing member";
+  if (!isConfinedPath(entry.file, targetRoot)) return "file path is outside target root";
+  if (entry.backup && !isConfinedPath(entry.backup, targetRoot)) return "backup path is outside target root";
+  return null;
+}
+
+function validateManifestEntry(value: unknown, label: string, warnings: string[]): ManifestEntry[] {
+  if (!isRecord(value)) {
+    warnings.push(`skipping invalid manifest entry at ${label}: expected object`);
+    return [];
+  }
+  const backup = value.backup;
+  const kind = value.kind;
+  const scope = value.scope;
+  if (
+    typeof value.team !== "string" ||
+    (scope !== "user" && scope !== "project" && scope !== "skill") ||
+    typeof value.file !== "string" ||
+    !(backup === undefined || backup === null || typeof backup === "string") ||
+    typeof value.hash !== "string" ||
+    (kind !== "agent" && kind !== "skill") ||
+    typeof value.installed_at !== "string" ||
+    (kind === "agent" && typeof value.member !== "string")
+  ) {
+    warnings.push(`skipping invalid manifest entry at ${label}: unsupported entry schema`);
+    return [];
+  }
+  return [value as ManifestEntry];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }

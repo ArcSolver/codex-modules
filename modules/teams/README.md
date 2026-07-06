@@ -83,7 +83,7 @@ Actual `codex exec` launch requires both opt-ins:
 codex-teams run team.json --goal "Review this change" --execute --allow-codex
 ```
 
-The executed runner uses `codex exec -s workspace-write --skip-git-repo-check --json --ephemeral` by default, writes run artifacts under `.codex-teams/<team>/runs/`, and rejects dangerous sandbox bypass text.
+The executed runner uses `codex exec -s workspace-write --skip-git-repo-check --json --ephemeral` by default and writes run artifacts under `.codex-teams/<team>/runs/`. The runner only accepts `read-only` or `workspace-write` sandbox modes, never forwards danger-access flags, and passes the assembled prompt as one positional `codex exec` argument.
 
 Install the optional Codex skill:
 
@@ -104,7 +104,7 @@ Install renders each member to TOML with:
 - `nickname_candidates`
 - `developer_instructions`
 
-All TOML strings are basic strings with quotes, backslashes, and newlines escaped. `nickname_candidates` is rendered as a string array.
+All TOML strings are basic strings with quotes, backslashes, newlines, and TOML control characters escaped. `nickname_candidates` is rendered as a string array.
 
 Existing unmanaged files are never overwritten unless `--force` is passed. Forced overwrites are backed up first. Uninstall only touches files recorded in the manifest for the selected target root.
 
@@ -124,13 +124,13 @@ Project state lives in:
 
 Leader state commands are for the leader or a human operator. Members report through their final `TEAM-RESULT: <one-line summary>` line. Workspace-write members may also leave optional artifacts, but the final message is the canonical result channel.
 
-`doctor` reports the Codex binary, version, native feature state, model catalog availability, write access, and installed teams. `multi_agent` must be stable and enabled for a healthy native workflow. `enable_fanout` and `multi_agent_v2` are reported as under-development surfaces only.
+`doctor` reports the Codex binary, version, native feature state, model catalog availability, write access, and installed teams split into user and project scopes. `multi_agent` must be stable and enabled for a healthy native workflow. `enable_fanout` and `multi_agent_v2` are reported as under-development surfaces only.
+
+The package has zero runtime dependencies. Its package root exports only the supported high-level helpers for team parsing, install/uninstall, doctor, prompt/run planning, and durable state/task/note operations.
 
 ## Attribution
 
 No third-party code is included; the state protocol is an original clean-room design.
-
-This module vendors local kit utilities adapted from `modules/config-kit/src/` in this repository. Vendored source files carry `// Adapted from modules/config-kit/src/<file>.ts` comments.
 
 ## Uninstall Rollback
 

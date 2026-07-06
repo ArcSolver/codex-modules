@@ -140,11 +140,7 @@ function resolveRunDir(team: TeamDef, opts: RunOptions): string {
 
 function assertSafeRunOptions(opts: RunOptions): void {
   if (!opts.goal || !opts.goal.trim()) throw new Error("--goal is required");
-  for (const text of [opts.goal]) {
-    if (/dangerously-|danger-full-access|bypass|sandbox_permissions/i.test(text)) {
-      throw new Error("dangerous Codex config text is not allowed in team run");
-    }
-  }
+  if (opts.sandbox !== undefined && opts.sandbox !== "read-only" && opts.sandbox !== "workspace-write") throw new Error("sandbox must be read-only or workspace-write");
   if (opts.timeoutSec !== undefined && (!Number.isFinite(opts.timeoutSec) || opts.timeoutSec <= 0)) throw new Error("timeout-sec must be > 0");
   if (opts.stallSec !== undefined && (!Number.isFinite(opts.stallSec) || opts.stallSec <= 0)) throw new Error("stall-sec must be > 0");
 }

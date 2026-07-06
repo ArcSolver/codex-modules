@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { accessSync, constants as fsConstants, existsSync, statSync } from "node:fs";
 import { dirname } from "node:path";
 import type { DoctorReport } from "./types.js";
-import { findCodexBinary, listInstalledTeams, resolveAgentsRoot, resolveCodexHome } from "./agents.js";
+import { findCodexBinary, listInstalledTeams, parseModelCatalog, resolveAgentsRoot, resolveCodexHome } from "./agents.js";
 import { resolveStateRoot } from "./state.js";
 
 export type DoctorOptions = {
@@ -30,6 +30,7 @@ export function doctor(opts: DoctorOptions = {}): DoctorReport {
   const fanout = featureState(features, "enable_fanout");
   const multiAgentV2 = featureState(features, "multi_agent_v2");
   const agentsRoot = resolveAgentsRoot("user", { codexHome, env });
+  const projectAgentsRoot = resolveAgentsRoot("project", { cwd: opts.cwd, env });
   const stateRoot = resolveStateRoot({ cwd: opts.cwd, stateDir: opts.stateDir, env });
   return {
     codexBinary: bin,
@@ -42,7 +43,8 @@ export function doctor(opts: DoctorOptions = {}): DoctorReport {
     models: bin ? debugModels(bin, { ...process.env, ...env, CODEX_HOME: codexHome }) : { ok: false, values: [], error: "codex binary not found" },
     agentsDirWritable: canWriteDir(agentsRoot),
     stateDirWritable: canWriteDir(stateRoot),
-    installedTeams: existsSync(agentsRoot) ? listInstalledTeams(agentsRoot) : [],
+    userInstalledTeams: existsSync(agentsRoot) ? listInstalledTeams(agentsRoot) : [],
+    projectInstalledTeams: existsSync(projectAgentsRoot) ? listInstalledTeams(projectAgentsRoot) : [],
   };
 }
 
@@ -61,7 +63,8 @@ export function formatDoctor(report: DoctorReport): string {
     report.models.ok ? `models: ${report.models.values.length}` : `models: unavailable (${report.models.error ?? "unknown error"})`,
     `agents dir writable: ${report.agentsDirWritable}`,
     `state dir writable: ${report.stateDirWritable}`,
-    `installed teams: ${report.installedTeams.length ? report.installedTeams.join(", ") : "none"}`,
+    `user installed teams: ${report.userInstalledTeams.length ? report.userInstalledTeams.join(", ") : "none"}`,
+    `project installed teams: ${report.projectInstalledTeams.length ? report.projectInstalledTeams.join(", ") : "none"}`,
   ].filter((line): line is string => Boolean(line));
   return `${lines.join("\n")}\n`;
 }
@@ -95,8 +98,11 @@ function debugModels(bin: string, env: NodeJS.ProcessEnv): DoctorReport["models"
     const reason = result.error ? result.error.message : result.stderr.trim();
     return { ok: false, values: [], error: reason || "codex debug models failed" };
   }
-  const values = [...new Set([...result.stdout.matchAll(/\b(?:gpt|o)[A-Za-z0-9_.:-]+\b/g)].map(match => match[0]))].sort();
-  return { ok: true, values };
+  try {
+    return { ok: true, values: parseModelCatalog(result.stdout) };
+  } catch (error) {
+    return { ok: false, values: [], error: error instanceof Error ? error.message : String(error) };
+  }
 }
 
 function featureState(features: DoctorReport["features"], name: string): DoctorReport["multiAgent"] {
