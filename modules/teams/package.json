@@ -1,0 +1,55 @@
+{
+  "name": "@codex-modules/teams",
+  "version": "0.1.0",
+  "description": "Team definitions, durable state, and leader prompts for Codex native multi-agent collaboration.",
+  "keywords": [
+    "codex",
+    "openai-codex",
+    "codex-cli",
+    "teams",
+    "multi-agent",
+    "collaboration"
+  ],
+  "license": "MIT",
+  "author": "ArcSolver <hailo.dev01@gmail.com>",
+  "homepage": "https://github.com/ArcSolver/codex-modules/tree/main/modules/teams#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ArcSolver/codex-modules.git",
+    "directory": "modules/teams"
+  },
+  "bugs": "https://github.com/ArcSolver/codex-modules/issues",
+  "type": "module",
+  "bin": {
+    "codex-teams": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "README.ko.md"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "verify": "bash verify/verify.sh",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "smol-toml": "^1.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.8.3"
+  }
+}

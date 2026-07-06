@@ -23,6 +23,7 @@ codex-modules is a collection of production-quality modules for extending and cu
 | `session-recall` | `@codex-modules/session-recall` | Search past Codex sessions locally: SQLite FTS index over transcripts with anchored context windows | alpha |
 | `lsp-sidecar` | `@codex-modules/lsp-sidecar` | Give Codex code intelligence via MCP: LSP diagnostics, definition, hover, and workspace symbols | alpha |
 | `scheduler` | `@codex-modules/scheduler` | Schedule safe, opt-in `codex exec` jobs with cron/interval parsing, wake gates, and dry-run defaults | alpha |
+| `teams` | `@codex-modules/teams` | Declare custom agent teams as data and run them on Codex's stable multi-agent tools, with durable task state and rollback-safe installs | alpha |
 
 ## Getting Started
 
