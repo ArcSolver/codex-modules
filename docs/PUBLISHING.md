@@ -30,10 +30,14 @@ for normal releases. It publishes with npm trusted publishing, so no
    - `mcp-manager`
    - `subagents`
    - `custom-models`
+   - `session-recall`
+   - `lsp-sidecar`
+   - `scheduler`
+   - `teams`
 4. Enter the exact version from `modules/<name>/package.json`.
 5. Run the workflow.
 
-The workflow installs Node.js 20 and the latest npm CLI, checks that the input
+The workflow installs Node.js 24 and the latest npm CLI, checks that the input
 version matches `package.json`, runs:
 
 ```bash
@@ -65,7 +69,8 @@ cd modules/<name> && npm pack --dry-run
 
 # 3. Publish (config-kit first by convention; there are no runtime
 #    cross-dependencies, so order is not load-bearing)
-for m in config-kit hooks skills mcp-manager subagents custom-models; do
+for m in config-kit hooks skills mcp-manager subagents custom-models \
+         session-recall lsp-sidecar scheduler teams; do
   (cd modules/$m && script -q /dev/null npm publish)
 done
 ```

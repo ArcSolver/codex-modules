@@ -17,6 +17,7 @@ on:
           - session-recall
           - lsp-sidecar
           - scheduler
+          - teams
       version:
         description: Confirm the package.json version to publish
         required: true
