@@ -1,5 +1,6 @@
 AGENTS.md
 .work/
+.claude/
 node_modules/
 dist/
 *.log
