@@ -31,6 +31,7 @@ const MODULE_ORDER = [
   "session-recall",
   "lsp-sidecar",
   "scheduler",
+  "teams",
 ];
 
 // Strip the `<p align="right">…</p>` language switcher we add to every README;
