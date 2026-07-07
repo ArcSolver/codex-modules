@@ -1,6 +1,6 @@
 {
   "name": "@codex-modules/teams",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Team definitions, durable state, and leader prompts for Codex native multi-agent collaboration.",
   "keywords": [
     "codex",
@@ -45,7 +45,6 @@
     "verify": "bash verify/verify.sh",
     "prepublishOnly": "npm run build"
   },
-  "dependencies": {},
   "devDependencies": {
     "@types/node": "^24.0.0",
     "typescript": "^5.8.3"
