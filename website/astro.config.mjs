@@ -4,9 +4,7 @@ import starlight from "@astrojs/starlight";
 import sitemap from "@astrojs/sitemap";
 import starlightLinksValidator from "starlight-links-validator";
 
-// Update `site` if a custom domain is attached; the pages.dev URL is derived
-// from the Cloudflare Pages project name.
-const SITE = "https://codex-modules.pages.dev";
+const SITE = "https://codex.arcyou.ai";
 
 export default defineConfig({
   site: SITE,

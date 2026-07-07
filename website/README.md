@@ -39,15 +39,17 @@ Connect the repo once in the Cloudflare dashboard
 
 | Setting | Value |
 | --- | --- |
+| Project name | `codex-modules` |
 | Root directory | `website` |
 | Framework preset | `Astro` |
 | Build command | `npm run build` |
 | Build output directory | `dist` |
 | Production branch | `main` |
+| Custom domain | `codex.arcyou.ai` |
 
 No adapter and no environment variables are required — this is a fully static
 build. Every push to `main` rebuilds and deploys automatically, and pull
 requests get preview deployments.
 
-If a custom domain is attached later, update `site` in `astro.config.mjs` so the
-sitemap and canonical URLs use it.
+The Astro `site` value is `https://codex.arcyou.ai`, so attach that custom
+domain before treating sitemap and canonical URLs as production-ready.
