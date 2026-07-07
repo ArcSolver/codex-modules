@@ -1,0 +1,51 @@
+{
+  "model": "claude-provider",
+  "instructions": "Synthetic offline verify fixture. Unsupported schemas must not reach Claude.",
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "[[fake:instant-result]] Report available supported tools only."
+        }
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "name": "exec_command",
+      "description": "Run a shell command in the workspace.",
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cmd": {
+            "type": "string"
+          }
+        },
+        "required": ["cmd"]
+      }
+    },
+    {
+      "type": "function",
+      "name": "unsupported_recursive",
+      "description": "Synthetic unsupported schema.",
+      "parameters": {
+        "$ref": "#"
+      }
+    }
+  ],
+  "tool_choice": "auto",
+  "parallel_tool_calls": false,
+  "reasoning": {},
+  "store": false,
+  "stream": true,
+  "include": [],
+  "prompt_cache_key": "synthetic-session-unsupported",
+  "client_metadata": {
+    "verify": "unsupported-schema"
+  }
+}

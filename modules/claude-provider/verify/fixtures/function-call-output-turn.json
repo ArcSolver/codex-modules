@@ -1,0 +1,54 @@
+{
+  "model": "claude-provider",
+  "instructions": "Synthetic offline verify fixture. __CALL_ID__ is replaced by verify.sh.",
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "[[fake:tool-once]] Use exec_command to print the current workspace path."
+        }
+      ]
+    },
+    {
+      "type": "function_call",
+      "name": "exec_command",
+      "call_id": "__CALL_ID__",
+      "arguments": "{\"cmd\":\"pwd\"}"
+    },
+    {
+      "type": "function_call_output",
+      "call_id": "__CALL_ID__",
+      "output": "/tmp/codex-claude-provider-offline\n"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "name": "exec_command",
+      "description": "Run a shell command in the workspace.",
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cmd": {
+            "type": "string"
+          }
+        },
+        "required": ["cmd"]
+      }
+    }
+  ],
+  "tool_choice": "auto",
+  "parallel_tool_calls": false,
+  "reasoning": {},
+  "store": false,
+  "stream": true,
+  "include": [],
+  "prompt_cache_key": "synthetic-session-main",
+  "client_metadata": {
+    "verify": "function-call-output"
+  }
+}
