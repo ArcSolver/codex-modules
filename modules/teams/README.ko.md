@@ -130,7 +130,7 @@ Install은 각 member를 다음 필드가 있는 TOML로 렌더합니다:
 
 `doctor`는 Codex binary, version, native feature state, model catalog availability, write access, installed teams를 user/project scope로 나눠 보고합니다. 다른 team state directory를 확인하려면 `--state-dir <dir>`를 사용합니다. 건강한 native workflow에는 `multi_agent`가 stable and enabled여야 합니다. `enable_fanout`과 `multi_agent_v2`는 under-development surface로만 보고합니다.
 
-이 package는 runtime dependency가 없습니다. package root는 team parsing, install/uninstall, doctor, prompt/run planning, durable state/task/note operation을 위한 지원 대상 high-level helper만 export합니다.
+이 package는 runtime dependency가 없습니다. package root는 team parsing, install/uninstall, doctor, prompt/run planning, durable state/task/note operation을 위한 지원 대상 high-level helper만 export합니다. Programmatic API에는 harness adapter 실험용 `HarnessProfile`과 `nativeV1Harness`도 포함됩니다. 이 harness export는 experimental이며 두 번째 adapter가 생기기 전까지 semver 밖에서 변경될 수 있습니다.
 
 ## Attribution
 

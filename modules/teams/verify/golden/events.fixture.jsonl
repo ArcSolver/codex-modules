@@ -1,0 +1,3 @@
+{"type":"response_item","item":{"name":"collab_tool_call","arguments":{"member":"scout"}}}
+this is not json
+{"type":"response_item","item":{"name":"unrelated","arguments":{}}}

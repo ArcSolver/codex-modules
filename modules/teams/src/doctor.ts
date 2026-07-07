@@ -3,6 +3,8 @@ import { accessSync, constants as fsConstants, existsSync, statSync } from "node
 import { dirname } from "node:path";
 import type { DoctorReport } from "./types.js";
 import { findCodexBinary, listInstalledTeams, parseModelCatalog, resolveAgentsRoot, resolveCodexHome } from "./agents.js";
+import type { HarnessProfile } from "./harness.js";
+import { nativeV1Harness } from "./harness.js";
 import { resolveStateRoot } from "./state.js";
 
 export type DoctorOptions = {
@@ -48,8 +50,8 @@ export function doctor(opts: DoctorOptions = {}): DoctorReport {
   };
 }
 
-export function doctorIsHealthy(report: DoctorReport): boolean {
-  return Boolean(report.codexBinary && report.multiAgent.present && report.multiAgent.stage === "stable" && report.multiAgent.enabled);
+export function doctorIsHealthy(report: DoctorReport, profile: HarnessProfile = nativeV1Harness): boolean {
+  return profile.transport.healthy(report);
 }
 
 export function formatDoctor(report: DoctorReport): string {

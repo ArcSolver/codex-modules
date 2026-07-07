@@ -1,8 +1,10 @@
 import { spawn } from "node:child_process";
-import { closeSync, createWriteStream, existsSync, mkdirSync, openSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { closeSync, createWriteStream, mkdirSync, openSync, statSync } from "node:fs";
 import { basename, join } from "node:path";
 import type { SandboxMode, TeamDef } from "./types.js";
 import { findCodexBinary, resolveCodexHome } from "./agents.js";
+import type { HarnessProfile } from "./harness.js";
+import { nativeV1Harness } from "./harness.js";
 import { parseTeamJson } from "./team.js";
 import { assembleLeaderPrompt } from "./prompt.js";
 import { resolveStateRoot, writeJsonAtomic } from "./state.js";
@@ -38,21 +40,21 @@ export type RunResult = {
   summaryPath: string;
 };
 
-export function buildRunPlan(teamPath: string, opts: RunOptions): DryRunPlan {
+export function buildRunPlan(teamPath: string, opts: RunOptions, profile: HarnessProfile = nativeV1Harness): DryRunPlan {
   const team = parseTeamJson(teamPath);
-  const prompt = assembleLeaderPrompt(team, opts.goal);
+  const prompt = assembleLeaderPrompt(team, opts.goal, profile);
   const runDir = resolveRunDir(team, opts);
   return {
     mode: "dry-run",
-    argv: buildCodexArgv(prompt, runDir, opts),
+    argv: profile.transport.runnerArgv(prompt, runDir, opts),
     prompt,
     runDir,
   };
 }
 
-export async function runTeam(teamPath: string, opts: RunOptions): Promise<DryRunPlan | RunResult> {
+export async function runTeam(teamPath: string, opts: RunOptions, profile: HarnessProfile = nativeV1Harness): Promise<DryRunPlan | RunResult> {
   assertSafeRunOptions(opts);
-  const plan = buildRunPlan(teamPath, opts);
+  const plan = buildRunPlan(teamPath, opts, profile);
   if (!opts.execute || !opts.allowCodex) return plan;
   if ((opts.sandbox ?? "workspace-write") === "read-only") {
     throw new Error("executed team runs require workspace-write because the leader writes .codex-teams state");
@@ -113,24 +115,8 @@ export async function runTeam(teamPath: string, opts: RunOptions): Promise<DryRu
   });
 
   if (!status) status = exitCode === 0 ? "ok" : "error";
-  writeJsonAtomic(summaryPath, summarizeEvents(eventsPath, { status, exitCode, teamPath: basename(teamPath) }));
+  writeJsonAtomic(summaryPath, profile.transport.summarize(eventsPath, { status, exitCode, teamPath: basename(teamPath) }));
   return { mode: "executed", status, exitCode, argv: plan.argv, runDir: plan.runDir, eventsPath, lastMessagePath, summaryPath };
-}
-
-export function buildCodexArgv(prompt: string, runDir: string, opts: RunOptions): string[] {
-  const sandbox = opts.sandbox ?? "workspace-write";
-  if (sandbox !== "read-only" && sandbox !== "workspace-write") throw new Error("sandbox must be read-only or workspace-write");
-  return [
-    "exec",
-    "-s",
-    sandbox,
-    "--skip-git-repo-check",
-    "--json",
-    "--ephemeral",
-    "-o",
-    join(runDir, "last-message.md"),
-    prompt,
-  ];
 }
 
 function resolveRunDir(team: TeamDef, opts: RunOptions): string {
@@ -143,24 +129,6 @@ function assertSafeRunOptions(opts: RunOptions): void {
   if (opts.sandbox !== undefined && opts.sandbox !== "read-only" && opts.sandbox !== "workspace-write") throw new Error("sandbox must be read-only or workspace-write");
   if (opts.timeoutSec !== undefined && (!Number.isFinite(opts.timeoutSec) || opts.timeoutSec <= 0)) throw new Error("timeout-sec must be > 0");
   if (opts.stallSec !== undefined && (!Number.isFinite(opts.stallSec) || opts.stallSec <= 0)) throw new Error("stall-sec must be > 0");
-}
-
-function summarizeEvents(path: string, base: Record<string, unknown>): Record<string, unknown> {
-  const collabToolCalls: unknown[] = [];
-  if (existsSync(path)) {
-    for (const line of readFileSync(path, "utf8").split(/\r?\n/)) {
-      if (!line.trim()) continue;
-      try {
-        const item = JSON.parse(line) as Record<string, unknown>;
-        if (JSON.stringify(item).includes("collab_tool_call")) collabToolCalls.push(item);
-      } catch {
-        // ignore non-JSON event lines
-      }
-    }
-  } else {
-    writeFileSync(path, "");
-  }
-  return { ...base, collabToolCallCount: collabToolCalls.length, collabToolCalls };
 }
 
 function latestMtimeMs(paths: string[], fallback: number): number {

@@ -130,7 +130,7 @@ Leader state commands are for the leader or a human operator. Members report thr
 
 `doctor` reports the Codex binary, version, native feature state, model catalog availability, write access, and installed teams split into user and project scopes. Use `--state-dir <dir>` to check an alternate team state directory. `multi_agent` must be stable and enabled for a healthy native workflow. `enable_fanout` and `multi_agent_v2` are reported as under-development surfaces only.
 
-The package has zero runtime dependencies. Its package root exports only the supported high-level helpers for team parsing, install/uninstall, doctor, prompt/run planning, and durable state/task/note operations.
+The package has zero runtime dependencies. Its package root exports only the supported high-level helpers for team parsing, install/uninstall, doctor, prompt/run planning, and durable state/task/note operations. Programmatic API also includes `HarnessProfile` and `nativeV1Harness` for harness adapter experiments. These harness exports are experimental and may change outside semver before a second adapter exists.
 
 ## Attribution
 

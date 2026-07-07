@@ -17,6 +17,16 @@ assert_not_exists() { [[ ! -e "$1" ]] || fail "expected absent: $1"; }
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/codex-teams-verify.XXXXXX")"
 trap 'rm -rf "$TMP"' EXIT
 
+GOLDEN_TMP="$TMP/golden"
+"$ROOT/verify/golden/generate.sh" "$GOLDEN_TMP" >/tmp/codex-teams-golden-generate.out
+for golden_file in leader-prompt.golden.txt member-instructions.golden.txt skill.golden.md argv.golden.json doctor.golden.txt; do
+  diff -u "$ROOT/verify/golden/$golden_file" "$GOLDEN_TMP/$golden_file" >/tmp/codex-teams-golden-diff.out || fail "golden drift: $golden_file"
+done
+pass "golden outputs match committed baselines"
+
+"$NODE_BIN" --input-type=module -e 'const {pathToFileURL}=await import("node:url");const mod=await import(pathToFileURL(process.argv[1]).href);const summary=mod.nativeV1Harness.transport.summarize(process.argv[2],{status:"ok"});if(summary.collabToolCallCount!==1)process.exit(1)' "$ROOT/dist/index.js" "$ROOT/verify/golden/events.fixture.jsonl" || fail "nativeV1 summarize collab_tool_call count drifted"
+pass "nativeV1 summarize counts collab_tool_call events"
+
 export CODEX_HOME="$TMP/codex-home"
 PROJECT="$TMP/project"
 mkdir -p "$CODEX_HOME" "$PROJECT/.git"
@@ -343,7 +353,7 @@ pass "project roots reject symlink escape"
 [[ ! -d "$ROOT/src/kit" ]] || fail "src/kit still exists"
 [[ ! -d "$ROOT/dist/kit" ]] || fail "dist/kit still exists"
 "$NODE_BIN" -e 'const f=require("fs");const p=JSON.parse(f.readFileSync(process.argv[1],"utf8"));if(Object.keys(p.dependencies||{}).length!==0)process.exit(1)' "$ROOT/package.json" || fail "runtime dependencies are not empty"
-"$NODE_BIN" --input-type=module -e 'const {pathToFileURL}=await import("node:url");const mod=await import(pathToFileURL(process.argv[1]).href);for(const key of ["installTeam","uninstallTeam","renderAgentToml","listInstalledTeams","resolveAgentsRoot","doctor","assembleLeaderPrompt","buildRunPlan","runTeam","initState","addTask","claimTask","addNote","parseTeamJson","validateTeamDef"])if(!(key in mod))process.exit(1);for(const key of ["acquireMkdirLock","withLock","renderToml","tomlBasicString"])if(key in mod)process.exit(1)' "$ROOT/dist/index.js" || fail "public exports do not match supported surface"
+"$NODE_BIN" --input-type=module -e 'const {pathToFileURL}=await import("node:url");const mod=await import(pathToFileURL(process.argv[1]).href);for(const key of ["installTeam","uninstallTeam","renderAgentToml","listInstalledTeams","resolveAgentsRoot","doctor","doctorIsHealthy","assembleLeaderPrompt","buildRunPlan","runTeam","nativeV1Harness","initState","addTask","claimTask","addNote","parseTeamJson","validateTeamDef"])if(!(key in mod))process.exit(1);for(const key of ["acquireMkdirLock","withLock","renderToml","tomlBasicString","buildCodexArgv"])if(key in mod)process.exit(1)' "$ROOT/dist/index.js" || fail "public exports do not match supported surface"
 pass "kit code removed and public exports narrowed"
 
 mkdir -p "$TMP/no-bin"
