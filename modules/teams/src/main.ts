@@ -22,6 +22,41 @@ type ParsedArgs = {
   flags: Map<string, string | true>;
 };
 
+type FlagKind = "value" | "boolean";
+type FlagSpec = Readonly<Record<string, FlagKind>>;
+
+const FLAG_SPECS = {
+  init: { preset: "value", out: "value" },
+  validate: {},
+  doctor: { "codex-home": "value", "state-dir": "value", json: "boolean" },
+  install: { "codex-home": "value", scope: "value", force: "boolean", "skip-model-check": "boolean" },
+  uninstall: { "codex-home": "value", scope: "value" },
+  "leader-prompt": { goal: "value" },
+  "skill install": { "codex-home": "value", force: "boolean" },
+  "skill uninstall": { "codex-home": "value" },
+  run: {
+    goal: "value",
+    "codex-home": "value",
+    "state-dir": "value",
+    sandbox: "value",
+    "timeout-sec": "value",
+    "stall-sec": "value",
+    execute: "boolean",
+    "allow-codex": "boolean",
+  },
+  "state init": { "state-dir": "value", goal: "value", "no-gitignore": "boolean" },
+  "state show": { "state-dir": "value", json: "boolean" },
+  "state finish": { "state-dir": "value", status: "value" },
+  "member bind": { "agent-id": "value", "state-dir": "value", nickname: "value" },
+  "task add": { "state-dir": "value", title: "value", detail: "value", "depends-on": "value" },
+  "task claim": { "state-dir": "value", actor: "value", "lease-sec": "value" },
+  "task complete": { "state-dir": "value", actor: "value", result: "value" },
+  "task fail": { "state-dir": "value", actor: "value", result: "value" },
+  "task list": { "state-dir": "value", reclaim: "boolean", json: "boolean" },
+  "note add": { "state-dir": "value", actor: "value", text: "value", kind: "value" },
+  "note list": { "state-dir": "value", json: "boolean" },
+} as const satisfies Record<string, FlagSpec>;
+
 export async function main(args: string[]): Promise<void> {
   try {
     await run(args);
@@ -39,7 +74,7 @@ async function run(args: string[]): Promise<void> {
   }
 
   if (command === "init") {
-    const parsed = parseArgs(rest);
+    const parsed = parseArgs(rest, "init");
     const preset = flag(parsed, "preset") ?? "review-panel";
     if (preset !== "review-panel" && preset !== "swarm" && preset !== "pipeline") throw new Error("--preset must be review-panel, swarm, or pipeline");
     writePreset(flag(parsed, "out") ?? "team.json", preset);
@@ -48,7 +83,7 @@ async function run(args: string[]): Promise<void> {
   }
 
   if (command === "validate") {
-    const parsed = parseArgs(rest);
+    const parsed = parseArgs(rest, "validate");
     const file = parsed.positional[0];
     if (!file) throw new Error("usage: codex-teams validate <team.json>");
     const raw = JSON.parse(await import("node:fs").then(fs => fs.readFileSync(file, "utf8"))) as unknown;
@@ -59,7 +94,7 @@ async function run(args: string[]): Promise<void> {
   }
 
   if (command === "doctor") {
-    const parsed = parseArgs(rest);
+    const parsed = parseArgs(rest, "doctor");
     const report = doctor({ codexHome: flag(parsed, "codex-home"), stateDir: flag(parsed, "state-dir") });
     if (boolFlag(parsed, "json")) console.log(JSON.stringify(report, null, 2));
     else process.stdout.write(formatDoctor(report));
@@ -68,7 +103,7 @@ async function run(args: string[]): Promise<void> {
   }
 
   if (command === "install") {
-    const parsed = parseArgs(rest);
+    const parsed = parseArgs(rest, "install");
     const file = parsed.positional[0];
     if (!file) throw new Error("usage: codex-teams install <team.json>");
     const result = installTeam(file, {
@@ -83,7 +118,7 @@ async function run(args: string[]): Promise<void> {
   }
 
   if (command === "uninstall") {
-    const parsed = parseArgs(rest);
+    const parsed = parseArgs(rest, "uninstall");
     const team = parsed.positional[0];
     if (!team) throw new Error("usage: codex-teams uninstall <team-name>");
     const result = uninstallTeam(team, { codexHome: flag(parsed, "codex-home"), scope: scopeFlag(parsed) });
@@ -93,7 +128,7 @@ async function run(args: string[]): Promise<void> {
   }
 
   if (command === "leader-prompt") {
-    const parsed = parseArgs(rest);
+    const parsed = parseArgs(rest, "leader-prompt");
     const file = parsed.positional[0];
     const goal = requiredFlag(parsed, "goal");
     if (!file) throw new Error("usage: codex-teams leader-prompt <team.json> --goal <text>");
@@ -103,13 +138,14 @@ async function run(args: string[]): Promise<void> {
 
   if (command === "skill") {
     const [subcommand, ...skillRest] = rest;
-    const parsed = parseArgs(skillRest);
     if (subcommand === "install") {
+      const parsed = parseArgs(skillRest, "skill install");
       const result = installSkill({ codexHome: flag(parsed, "codex-home"), force: boolFlag(parsed, "force") });
       console.log(`OK skill install ${result.file}`);
       return;
     }
     if (subcommand === "uninstall") {
+      const parsed = parseArgs(skillRest, "skill uninstall");
       const result = uninstallSkill({ codexHome: flag(parsed, "codex-home") });
       console.log(`OK skill uninstall removed=${result.removed.length} restored=${result.restored.length}`);
       return;
@@ -118,7 +154,7 @@ async function run(args: string[]): Promise<void> {
   }
 
   if (command === "run") {
-    const parsed = parseArgs(rest);
+    const parsed = parseArgs(rest, "run", { sandboxAlias: true });
     const file = parsed.positional[0];
     if (!file) throw new Error("usage: codex-teams run <team.json> --goal <text>");
     const result = await runTeam(file, {
@@ -167,22 +203,30 @@ async function run(args: string[]): Promise<void> {
 
 function handleState(args: string[]): void {
   const [subcommand, ...rest] = args;
-  const parsed = parseArgs(rest);
-  const team = parsed.positional[0];
-  if (!team) throw new Error("usage: codex-teams state init|show|finish <team>");
-  const opts = { stateDir: flag(parsed, "state-dir") };
   if (subcommand === "init") {
+    const parsed = parseArgs(rest, "state init");
+    const team = parsed.positional[0];
+    if (!team) throw new Error("usage: codex-teams state init|show|finish <team>");
+    const opts = { stateDir: flag(parsed, "state-dir") };
     const result = initState(team, requiredFlag(parsed, "goal"), { ...opts, noGitignore: boolFlag(parsed, "no-gitignore") });
     console.log(JSON.stringify(result, null, 2));
     return;
   }
   if (subcommand === "show") {
+    const parsed = parseArgs(rest, "state show");
+    const team = parsed.positional[0];
+    if (!team) throw new Error("usage: codex-teams state init|show|finish <team>");
+    const opts = { stateDir: flag(parsed, "state-dir") };
     const result = showState(team, opts);
     if (boolFlag(parsed, "json")) console.log(JSON.stringify(result, null, 2));
     else console.log(`team=${result.team} status=${result.status} goal=${result.goal}`);
     return;
   }
   if (subcommand === "finish") {
+    const parsed = parseArgs(rest, "state finish");
+    const team = parsed.positional[0];
+    if (!team) throw new Error("usage: codex-teams state init|show|finish <team>");
+    const opts = { stateDir: flag(parsed, "state-dir") };
     const status = requiredFlag(parsed, "status");
     if (status !== "ok" && status !== "partial") throw new Error("--status must be ok or partial");
     console.log(JSON.stringify(finishState(team, status, opts), null, 2));
@@ -193,8 +237,8 @@ function handleState(args: string[]): void {
 
 function handleMember(args: string[]): void {
   const [subcommand, ...rest] = args;
-  const parsed = parseArgs(rest);
   if (subcommand !== "bind") throw new Error("usage: codex-teams member bind <team> <member> --agent-id <id>");
+  const parsed = parseArgs(rest, "member bind");
   const [team, member] = parsed.positional;
   if (!team || !member) throw new Error("usage: codex-teams member bind <team> <member> --agent-id <id>");
   console.log(JSON.stringify(bindMember(team, member, requiredFlag(parsed, "agent-id"), { stateDir: flag(parsed, "state-dir"), nickname: flag(parsed, "nickname") }), null, 2));
@@ -202,26 +246,38 @@ function handleMember(args: string[]): void {
 
 function handleTask(args: string[]): void {
   const [subcommand, ...rest] = args;
-  const parsed = parseArgs(rest);
-  const [team, taskId] = parsed.positional;
-  if (!team) throw new Error("usage: codex-teams task add|claim|complete|fail|list <team>");
-  const opts = { stateDir: flag(parsed, "state-dir") };
   if (subcommand === "add") {
+    const parsed = parseArgs(rest, "task add");
+    const [team] = parsed.positional;
+    if (!team) throw new Error("usage: codex-teams task add|claim|complete|fail|list <team>");
+    const opts = { stateDir: flag(parsed, "state-dir") };
     const task = addTask(team, { title: requiredFlag(parsed, "title"), detail: flag(parsed, "detail"), dependsOn: splitCsv(flag(parsed, "depends-on")) }, opts);
     console.log(JSON.stringify(task, null, 2));
     return;
   }
   if (subcommand === "claim") {
+    const parsed = parseArgs(rest, "task claim");
+    const [team, taskId] = parsed.positional;
+    if (!team) throw new Error("usage: codex-teams task add|claim|complete|fail|list <team>");
     if (!taskId) throw new Error("usage: codex-teams task claim <team> <task-id> --actor <name>");
+    const opts = { stateDir: flag(parsed, "state-dir") };
     console.log(JSON.stringify(claimTask(team, taskId, { actor: requiredFlag(parsed, "actor"), leaseSec: numberFlag(parsed, "lease-sec") }, opts), null, 2));
     return;
   }
   if (subcommand === "complete" || subcommand === "fail") {
+    const parsed = parseArgs(rest, subcommand === "complete" ? "task complete" : "task fail");
+    const [team, taskId] = parsed.positional;
+    if (!team) throw new Error("usage: codex-teams task add|claim|complete|fail|list <team>");
     if (!taskId) throw new Error(`usage: codex-teams task ${subcommand} <team> <task-id> --actor <name>`);
+    const opts = { stateDir: flag(parsed, "state-dir") };
     console.log(JSON.stringify(completeTask(team, taskId, { actor: requiredFlag(parsed, "actor"), result: flag(parsed, "result"), failed: subcommand === "fail" }, opts), null, 2));
     return;
   }
   if (subcommand === "list") {
+    const parsed = parseArgs(rest, "task list");
+    const [team] = parsed.positional;
+    if (!team) throw new Error("usage: codex-teams task add|claim|complete|fail|list <team>");
+    const opts = { stateDir: flag(parsed, "state-dir") };
     const tasks = listTasks(team, { ...opts, reclaim: boolFlag(parsed, "reclaim") });
     if (boolFlag(parsed, "json")) console.log(JSON.stringify(tasks, null, 2));
     else for (const task of tasks.tasks) console.log(`${task.id}\t${task.status}\t${task.title}`);
@@ -232,15 +288,19 @@ function handleTask(args: string[]): void {
 
 function handleNote(args: string[]): void {
   const [subcommand, ...rest] = args;
-  const parsed = parseArgs(rest);
-  const team = parsed.positional[0];
-  if (!team) throw new Error("usage: codex-teams note add|list <team>");
-  const opts = { stateDir: flag(parsed, "state-dir") };
   if (subcommand === "add") {
+    const parsed = parseArgs(rest, "note add");
+    const team = parsed.positional[0];
+    if (!team) throw new Error("usage: codex-teams note add|list <team>");
+    const opts = { stateDir: flag(parsed, "state-dir") };
     console.log(JSON.stringify(addNote(team, { actor: requiredFlag(parsed, "actor"), text: requiredFlag(parsed, "text"), kind: kindFlag(parsed) }, opts), null, 2));
     return;
   }
   if (subcommand === "list") {
+    const parsed = parseArgs(rest, "note list");
+    const team = parsed.positional[0];
+    if (!team) throw new Error("usage: codex-teams note add|list <team>");
+    const opts = { stateDir: flag(parsed, "state-dir") };
     const notes = listNotes(team, opts);
     if (boolFlag(parsed, "json")) console.log(JSON.stringify(notes, null, 2));
     else for (const note of notes) console.log(`${note.ts}\t${note.actor}\t${note.kind}\t${note.text}`);
@@ -249,32 +309,10 @@ function handleNote(args: string[]): void {
   throw new Error("usage: codex-teams note add|list <team>");
 }
 
-function parseArgs(args: string[]): ParsedArgs {
+function parseArgs(args: string[], commandPath: keyof typeof FLAG_SPECS, options: { sandboxAlias?: boolean } = {}): ParsedArgs {
   const positional: string[] = [];
   const flags = new Map<string, string | true>();
-  const valueFlags = new Set([
-    "actor",
-    "agent-id",
-    "codex-home",
-    "depends-on",
-    "detail",
-    "goal",
-    "kind",
-    "lease-sec",
-    "model",
-    "nickname",
-    "out",
-    "preset",
-    "result",
-    "sandbox",
-    "scope",
-    "stall-sec",
-    "state-dir",
-    "status",
-    "text",
-    "timeout-sec",
-    "title",
-  ]);
+  const spec: FlagSpec = FLAG_SPECS[commandPath];
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]!;
     if (arg === "--") {
@@ -284,12 +322,15 @@ function parseArgs(args: string[]): ParsedArgs {
     if (arg.startsWith("--")) {
       const eq = arg.indexOf("=");
       if (eq !== -1) {
-        flags.set(arg.slice(2, eq), arg.slice(eq + 1));
+        const name = arg.slice(2, eq);
+        if (!isKnownFlag(spec, name)) throw new Error(`unknown flag --${name} for '${commandPath}'`);
+        flags.set(name, arg.slice(eq + 1));
         continue;
       }
       const name = arg.slice(2);
+      if (!isKnownFlag(spec, name)) throw new Error(`unknown flag --${name} for '${commandPath}'`);
       const next = args[i + 1];
-      if (valueFlags.has(name)) {
+      if (spec[name] === "value") {
         if (next === undefined) throw new Error(`--${name} requires a value`);
         flags.set(name, next);
         i++;
@@ -299,6 +340,7 @@ function parseArgs(args: string[]): ParsedArgs {
       continue;
     }
     if (arg === "-s") {
+      if (!options.sandboxAlias || spec.sandbox !== "value") throw new Error(`unknown flag -s for '${commandPath}'`);
       const next = args[++i];
       if (!next) throw new Error("-s requires a value");
       flags.set("sandbox", next);
@@ -307,6 +349,10 @@ function parseArgs(args: string[]): ParsedArgs {
     positional.push(arg);
   }
   return { positional, flags };
+}
+
+function isKnownFlag(spec: FlagSpec, name: string): boolean {
+  return Object.prototype.hasOwnProperty.call(spec, name);
 }
 
 function flag(parsed: ParsedArgs, name: string): string | undefined {
@@ -368,12 +414,13 @@ function printHelp(): void {
 Usage:
   codex-teams init [--preset review-panel|swarm|pipeline] [--out team.json]
   codex-teams validate <team.json>
-  codex-teams doctor [--codex-home <dir>] [--json]
+  codex-teams doctor [--codex-home <dir>] [--state-dir <dir>] [--json]
   codex-teams install <team.json> [--codex-home <dir>] [--scope user|project] [--force] [--skip-model-check]
   codex-teams uninstall <team-name> [--codex-home <dir>] [--scope user|project]
   codex-teams leader-prompt <team.json> --goal <text>
-  codex-teams skill install|uninstall [--codex-home <dir>]
-  codex-teams run <team.json> --goal <text> [--execute --allow-codex] [-s workspace-write] [--timeout-sec N] [--stall-sec N]
+  codex-teams skill install [--codex-home <dir>] [--force]
+  codex-teams skill uninstall [--codex-home <dir>]
+  codex-teams run <team.json> --goal <text> [--codex-home <dir>] [--state-dir <dir>] [--execute --allow-codex] [-s workspace-write] [--timeout-sec N] [--stall-sec N]
   codex-teams state init|show|finish <team>
   codex-teams member bind <team> <member> --agent-id <id>
   codex-teams task add|claim|complete|fail|list <team>

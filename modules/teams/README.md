@@ -85,11 +85,15 @@ codex-teams run team.json --goal "Review this change" --execute --allow-codex
 
 The executed runner uses `codex exec -s workspace-write --skip-git-repo-check --json --ephemeral` by default and writes run artifacts under `.codex-teams/<team>/runs/`. The runner only accepts `read-only` or `workspace-write` sandbox modes, never forwards danger-access flags, and passes the assembled prompt as one positional `codex exec` argument.
 
+Use `--codex-home <dir>` to run against a sandbox or alternate Codex home, and `--state-dir <dir>` to write team state outside the default `.codex-teams` directory.
+
 Install the optional Codex skill:
 
 ```bash
 codex-teams skill install
 ```
+
+Use `codex-teams skill install --force` to replace an existing unmanaged skill file after creating a backup.
 
 ## How It Works
 
@@ -124,7 +128,7 @@ Project state lives in:
 
 Leader state commands are for the leader or a human operator. Members report through their final `TEAM-RESULT: <one-line summary>` line. Workspace-write members may also leave optional artifacts, but the final message is the canonical result channel.
 
-`doctor` reports the Codex binary, version, native feature state, model catalog availability, write access, and installed teams split into user and project scopes. `multi_agent` must be stable and enabled for a healthy native workflow. `enable_fanout` and `multi_agent_v2` are reported as under-development surfaces only.
+`doctor` reports the Codex binary, version, native feature state, model catalog availability, write access, and installed teams split into user and project scopes. Use `--state-dir <dir>` to check an alternate team state directory. `multi_agent` must be stable and enabled for a healthy native workflow. `enable_fanout` and `multi_agent_v2` are reported as under-development surfaces only.
 
 The package has zero runtime dependencies. Its package root exports only the supported high-level helpers for team parsing, install/uninstall, doctor, prompt/run planning, and durable state/task/note operations.
 

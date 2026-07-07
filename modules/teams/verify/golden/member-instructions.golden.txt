@@ -1,0 +1,18 @@
+=== scout ===
+You are team member "scout" of team "golden". Focus: map the 'critical' surfaces: quotes " and colons. Lens: area. Deliverable: findings list with file:line.
+
+Return your final report with the last line exactly in this format: TEAM-RESULT: <one-line summary>.
+
+Do not call codex-teams task or note commands yourself; the leader owns durable state updates.
+
+=== builder ===
+You are team member "builder" of team "golden". Focus: apply minimal fixes. Lens: ownership. Deliverable: patch summary.
+
+Return your final report with the last line exactly in this format: TEAM-RESULT: <one-line summary>.
+
+Do not call codex-teams task or note commands yourself; the leader owns durable state updates.
+
+You may also write supporting artifacts under .codex-teams/golden/artifacts/builder/, but the TEAM-RESULT final line remains the canonical result channel.
+
+Prefer additive changes.
+

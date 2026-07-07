@@ -88,6 +88,43 @@ cat >team.json <<'JSON'
 }
 JSON
 
+set +e
+run validate team.json --nope >/tmp/codex-teams-unknown-bool.out 2>&1
+UNKNOWN_BOOL_STATUS=$?
+set -e
+if [[ "$UNKNOWN_BOOL_STATUS" -eq 0 ]]; then
+  fail "unknown bool flag unexpectedly succeeded"
+fi
+assert_grep /tmp/codex-teams-unknown-bool.out "unknown flag --nope for 'validate'"
+pass "unknown bool flag is rejected"
+
+set +e
+run validate team.json --nope=1 >/tmp/codex-teams-unknown-value.out 2>&1
+UNKNOWN_VALUE_STATUS=$?
+set -e
+if [[ "$UNKNOWN_VALUE_STATUS" -eq 0 ]]; then
+  fail "unknown value flag unexpectedly succeeded"
+fi
+assert_grep /tmp/codex-teams-unknown-value.out "unknown flag --nope for 'validate'"
+pass "unknown equals flag is rejected"
+
+set +e
+run run team.json --goal "verify goal" --dangerously-bypass-something >/tmp/codex-teams-dangerous-unknown.out 2>&1
+DANGEROUS_UNKNOWN_STATUS=$?
+set -e
+if [[ "$DANGEROUS_UNKNOWN_STATUS" -eq 0 ]]; then
+  fail "dangerously-prefixed unknown flag unexpectedly succeeded"
+fi
+assert_grep /tmp/codex-teams-dangerous-unknown.out "unknown flag --dangerously-bypass-something for 'run'"
+pass "dangerously-prefixed unknown flag is rejected generically"
+
+run validate team.json -- --nope >/tmp/codex-teams-double-dash.out 2>&1
+pass "double dash preserves trailing positional args"
+
+run run team.json --goal "verify goal" -s workspace-write >/tmp/codex-teams-run-short-sandbox.out 2>&1
+assert_grep /tmp/codex-teams-run-short-sandbox.out "DRY-RUN codex argv"
+pass "run short sandbox alias accepts workspace-write"
+
 run install team.json --codex-home "$CODEX_HOME" --skip-model-check >/tmp/codex-teams-install.out
 SECURITY_TOML="$CODEX_HOME/agents/review-panel-security.toml"
 CORRECTNESS_TOML="$CODEX_HOME/agents/review-panel-correctness.toml"

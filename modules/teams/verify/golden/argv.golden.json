@@ -1,0 +1,11 @@
+[
+  "exec",
+  "-s",
+  "workspace-write",
+  "--skip-git-repo-check",
+  "--json",
+  "--ephemeral",
+  "-o",
+  "/tmp/golden-state/golden/runs/<TS>/last-message.md",
+  "<PROMPT>"
+]

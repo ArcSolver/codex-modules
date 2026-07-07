@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "name": "golden",
+  "description": "Golden baseline fixture team",
+  "defaults": { "model": "gpt-5.4-mini", "sandbox_mode": "read-only" },
+  "members": [
+    {
+      "name": "scout",
+      "focus": "map the 'critical' surfaces: quotes \" and colons",
+      "lens": "area",
+      "deliverable": "findings list with file:line"
+    },
+    {
+      "name": "builder",
+      "focus": "apply minimal fixes",
+      "lens": "ownership",
+      "deliverable": "patch summary",
+      "sandbox_mode": "workspace-write",
+      "instructions": "Prefer additive changes."
+    }
+  ]
+}

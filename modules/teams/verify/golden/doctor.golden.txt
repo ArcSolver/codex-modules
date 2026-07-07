@@ -1,0 +1,11 @@
+codex binary: /opt/fixture/bin/codex
+version: 0.142.5
+multi_agent: stable enabled=true
+enable_fanout: underDevelopment enabled=false (under development - report only)
+multi_agent_v2: underDevelopment enabled=false (under development - report only)
+models: 1
+agents dir writable: true
+state dir writable: true
+user installed teams: golden
+project installed teams: none
+healthy: true

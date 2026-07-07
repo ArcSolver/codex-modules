@@ -85,11 +85,15 @@ codex-teams run team.json --goal "Review this change" --execute --allow-codex
 
 실행 runner는 기본적으로 `codex exec -s workspace-write --skip-git-repo-check --json --ephemeral`을 사용하고 run artifact를 `.codex-teams/<team>/runs/` 아래에 남깁니다. runner는 `read-only` 또는 `workspace-write` sandbox만 허용하고, danger-access flag를 전달하지 않으며, 조립된 prompt를 `codex exec`의 단일 positional 인자로만 넘깁니다.
 
+`--codex-home <dir>`로 sandbox 또는 다른 Codex home을 지정할 수 있고, `--state-dir <dir>`로 기본 `.codex-teams` 밖에 team state를 쓸 수 있습니다.
+
 선택적 Codex skill을 설치합니다:
 
 ```bash
 codex-teams skill install
 ```
+
+기존 unmanaged skill file을 backup 후 교체하려면 `codex-teams skill install --force`를 사용합니다.
 
 ## 동작 방식
 
@@ -124,7 +128,7 @@ Install은 각 member를 다음 필드가 있는 TOML로 렌더합니다:
 
 상태 CLI는 리더 또는 사람이 호출하는 표면입니다. 멤버는 마지막 `TEAM-RESULT: <one-line summary>` 줄로 보고합니다. Workspace-write 멤버는 선택적으로 artifact를 남길 수 있지만, canonical 결과 채널은 final message입니다.
 
-`doctor`는 Codex binary, version, native feature state, model catalog availability, write access, installed teams를 user/project scope로 나눠 보고합니다. 건강한 native workflow에는 `multi_agent`가 stable and enabled여야 합니다. `enable_fanout`과 `multi_agent_v2`는 under-development surface로만 보고합니다.
+`doctor`는 Codex binary, version, native feature state, model catalog availability, write access, installed teams를 user/project scope로 나눠 보고합니다. 다른 team state directory를 확인하려면 `--state-dir <dir>`를 사용합니다. 건강한 native workflow에는 `multi_agent`가 stable and enabled여야 합니다. `enable_fanout`과 `multi_agent_v2`는 under-development surface로만 보고합니다.
 
 이 package는 runtime dependency가 없습니다. package root는 team parsing, install/uninstall, doctor, prompt/run planning, durable state/task/note operation을 위한 지원 대상 high-level helper만 export합니다.
 
