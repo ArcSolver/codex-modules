@@ -124,10 +124,10 @@ function numberFlag(parsed: Parsed, name: string): number | undefined {
 }
 
 function usage(): void {
-  process.stderr.write(`codex-claude-provider <command>
+  process.stderr.write(`codex-with-claude <command>
 
 Commands:
-  serve [--host 127.0.0.1] [--port 47777] [--model claude-provider]
+  serve [--host 127.0.0.1] [--port 47777] [--model with-claude]
   install --codex-home <path> [--base-url http://127.0.0.1:47777/v1] [--set-default]
   uninstall --codex-home <path> [--restore-backup <path>]
   doctor [--codex-home <path>] [--base-url http://127.0.0.1:47777/v1] [--json]

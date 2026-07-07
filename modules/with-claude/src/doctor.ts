@@ -33,7 +33,7 @@ export async function doctor(options: DoctorOptions = {}): Promise<DoctorReport>
     add("install_manifest", existsSync(manifestPath), manifestPath);
     if (existsSync(configPath)) {
       const config = await readFile(configPath, "utf8");
-      add("provider_block", config.includes("[model_providers.claude_provider]"), "provider block lookup");
+      add("provider_block", config.includes("[model_providers.with_claude]"), "provider block lookup");
       add("wire_api", config.includes('wire_api = "responses"'), "wire_api responses lookup");
     }
   } else {

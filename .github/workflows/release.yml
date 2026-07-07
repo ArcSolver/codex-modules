@@ -18,6 +18,7 @@ on:
           - lsp-sidecar
           - scheduler
           - teams
+          - with-claude
       version:
         description: Confirm the package.json version to publish
         required: true

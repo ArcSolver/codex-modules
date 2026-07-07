@@ -1,4 +1,4 @@
-// Adapted from .work/experiments/claude-provider-adapter/scripts/probe-roundtrip-bridge.mjs
+// Adapted from .work/experiments/with-claude-adapter/scripts/probe-roundtrip-bridge.mjs
 import type { ServerResponse } from "node:http";
 import type {
   CodexResponsesRequest,
@@ -91,7 +91,7 @@ export class SseWriter {
   }
 
   completeDiagnosticError(request: CodexResponsesRequest, error: DiagnosticError): void {
-    this.completeText(request, `[claude-provider error: ${error.code}] ${error.message}`, ZERO_USAGE);
+    this.completeText(request, `[with-claude error: ${error.code}] ${error.message}`, ZERO_USAGE);
   }
 
   done(): void {

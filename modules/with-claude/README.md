@@ -1,15 +1,15 @@
 <p align="right">English | <a href="README.ko.md">한국어</a></p>
 
-# @codex-modules/claude-provider
+# @codex-modules/with-claude
 
-`codex-claude-provider` is a personal localhost provider adapter for Codex custom providers. It exposes a local Responses-compatible endpoint that Codex can call with `wire_api = "responses"` and bridges Codex function-tool turns to Claude through the Claude Agent SDK.
+`codex-with-claude` is a personal localhost provider adapter for Codex custom providers. It exposes a local Responses-compatible endpoint that Codex can call with `wire_api = "responses"` and bridges Codex function-tool turns to Claude through the Claude Agent SDK.
 
 The adapter does not execute Codex tools itself. Claude plans a tool call, the adapter emits a Codex `function_call`, Codex owns approval and execution, and the adapter passes the returned `function_call_output` back to the active Claude turn.
 
 ## Install
 
 ```bash
-npm install -g @codex-modules/claude-provider
+npm install -g @codex-modules/with-claude
 ```
 
 Or from source:
@@ -28,7 +28,7 @@ node dist/cli.js doctor --json
 When installed globally or through npm linking, the command is:
 
 ```bash
-codex-claude-provider doctor --json
+codex-with-claude doctor --json
 ```
 
 ## Usage
@@ -36,19 +36,19 @@ codex-claude-provider doctor --json
 Start the localhost adapter:
 
 ```bash
-codex-claude-provider serve
+codex-with-claude serve
 ```
 
 On startup it prints one JSON line to stdout:
 
 ```json
-{"baseUrl":"http://127.0.0.1:47777/v1","providerId":"claude_provider"}
+{"baseUrl":"http://127.0.0.1:47777/v1","providerId":"with_claude"}
 ```
 
 Install the Codex provider block into an explicit Codex home:
 
 ```bash
-codex-claude-provider install \
+codex-with-claude install \
   --codex-home /tmp/codex-home \
   --base-url http://127.0.0.1:47777/v1
 ```
@@ -56,7 +56,7 @@ codex-claude-provider install \
 By default `install` only adds the provider block. It does not change the top-level Codex `model` or `model_provider`. To make this provider the default for that Codex home:
 
 ```bash
-codex-claude-provider install \
+codex-with-claude install \
   --codex-home /tmp/codex-home \
   --base-url http://127.0.0.1:47777/v1 \
   --set-default
@@ -65,8 +65,8 @@ codex-claude-provider install \
 The injected provider uses:
 
 ```toml
-[model_providers.claude_provider]
-name = "Claude Provider"
+[model_providers.with_claude]
+name = "With Claude"
 base_url = "http://127.0.0.1:47777/v1"
 wire_api = "responses"
 ```
@@ -74,10 +74,10 @@ wire_api = "responses"
 Serve options:
 
 ```bash
-codex-claude-provider serve \
+codex-with-claude serve \
   --host 127.0.0.1 \
   --port 47777 \
-  --model claude-provider \
+  --model with-claude \
   --log-level info \
   --idle-ttl-ms 1800000 \
   --request-timeout-ms 90000 \
@@ -114,31 +114,31 @@ Timeouts and Claude-side errors are returned as diagnostic `output_text` followe
 Run:
 
 ```bash
-codex-claude-provider doctor --json
+codex-with-claude doctor --json
 ```
 
 With a sandbox Codex home:
 
 ```bash
-codex-claude-provider doctor --codex-home /tmp/codex-home --json
+codex-with-claude doctor --codex-home /tmp/codex-home --json
 ```
 
 With a running adapter:
 
 ```bash
-codex-claude-provider doctor \
+codex-with-claude doctor \
   --codex-home /tmp/codex-home \
   --base-url http://127.0.0.1:47777/v1 \
   --json
 ```
 
-`doctor` checks Node, pinned runtime dependencies, `ANTHROPIC_API_KEY` shadowing, optional Codex provider config, and optional `/healthz`. It does not inspect real `~/.codex` or `~/.claude` unless you explicitly pass a Codex home path.
+`doctor` checks Node, pinned runtime dependencies, `ANTHROPIC_API_KEY` shadowing, optional Codex provider config, and optional `/healthz`. It does not inspect real `~/.codex` or `~/.claude` unless you explicitly pass a Codex home path or set `CODEX_HOME` to that path.
 
 If `ANTHROPIC_API_KEY` is present, `serve` fails unless `ALLOW_ANTHROPIC_API_KEY=1` is also set. This keeps the adapter fail-closed when an environment key would change the Claude Agent SDK authentication path.
 
 ## Attribution
 
-This package includes adapter code derived from the repository-local proof-of-concept script `.work/experiments/claude-provider-adapter/scripts/probe-roundtrip-bridge.mjs`.
+No third-party source code is included in this package.
 
 Runtime dependencies:
 
@@ -152,19 +152,19 @@ Runtime dependencies:
 Remove the provider from the same Codex home used during install:
 
 ```bash
-codex-claude-provider uninstall --codex-home /tmp/codex-home
+codex-with-claude uninstall --codex-home /tmp/codex-home
 ```
 
 Install always creates a backup before writing:
 
 ```text
-<CODEX_HOME>/config.toml.codex-claude-provider.<timestamp>.bak
+<CODEX_HOME>/config.toml.codex-with-claude.<timestamp>.bak
 ```
 
 It also records install ownership in:
 
 ```text
-<CODEX_HOME>/codex-modules/claude-provider-install.json
+<CODEX_HOME>/codex-modules/with-claude-install.json
 ```
 
 `uninstall` removes only the sentinel-managed provider block. If `--set-default` was used and the current top-level values still match the installed values, it restores the previous top-level `model` and `model_provider`. If the sentinel block changed after install, uninstall refuses to edit and reports the backup path.

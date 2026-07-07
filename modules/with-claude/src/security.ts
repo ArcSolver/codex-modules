@@ -33,7 +33,7 @@ export function buildScrubbedClaudeEnv(options: {
   for (const key of keep) out[key] = source[key];
   if (options.allowAnthropicApiKey) out.ANTHROPIC_API_KEY = source.ANTHROPIC_API_KEY;
   out.CLAUDE_CODE_STREAM_CLOSE_TIMEOUT = String(options.streamCloseTimeoutMs);
-  out.CLAUDE_AGENT_SDK_CLIENT_APP = "codex-modules-claude-provider/0.1.0";
+  out.CLAUDE_AGENT_SDK_CLIENT_APP = "codex-modules-with-claude/0.1.0";
   return out;
 }
 

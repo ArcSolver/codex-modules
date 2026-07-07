@@ -17,7 +17,7 @@ fi
 [[ -n "$CODEX_BIN" ]] || skip "codex binary not found"
 [[ -f "$CLI" && -f "$ROOT/dist/index.js" ]] || fail "build first: missing dist/cli.js or dist/index.js"
 
-TMP="$(mktemp -d "${TMPDIR:-/tmp}/codex-claude-provider-behavioral.XXXXXX")"
+TMP="$(mktemp -d "${TMPDIR:-/tmp}/codex-with-claude-behavioral.XXXXXX")"
 # macOS: TMPDIR가 슬래시로 끝나 이중 슬래시가 생기고, /var는 /private/var의
 # symlink라 pwd 출력과 문자열 비교가 어긋난다. 물리 경로로 정규화한다.
 TMP="$(cd "$TMP" && pwd -P)"
@@ -76,9 +76,9 @@ pass "fake backend server started"
 "$NODE_BIN" "$CLI" install \
   --codex-home "$CODEX_HOME" \
   --base-url "$BASE_URL" \
-  --provider-id claude_provider \
-  --model claude-provider \
-  --set-default >/tmp/codex-claude-provider-install.out
+  --provider-id with_claude \
+  --model with-claude \
+  --set-default >/tmp/codex-with-claude-install.out
 pass "provider installed into sandbox CODEX_HOME"
 
 CODEX_STDOUT="$TMP/codex.stdout"
@@ -97,7 +97,7 @@ const args = [
   sandbox,
   "--skip-git-repo-check",
   "-m",
-  "claude-provider",
+  "with-claude",
   "Use exec_command to run pwd, then reply with only the command output path."
 ];
 
@@ -183,9 +183,9 @@ pass "Codex sent function_call_output tail and returned workspace path"
 
 "$NODE_BIN" "$CLI" uninstall \
   --codex-home "$CODEX_HOME" \
-  --provider-id claude_provider >/tmp/codex-claude-provider-uninstall.out
+  --provider-id with_claude >/tmp/codex-with-claude-uninstall.out
 
-if [[ -f "$CODEX_HOME/config.toml" ]] && grep -E '^[[:space:]]*model_provider[[:space:]]*=[[:space:]]*"claude_provider"|^[[:space:]]*model[[:space:]]*=[[:space:]]*"claude-provider"|^[[:space:]]*\[model_providers\.claude_provider\]|^# (BEGIN|END) codex-modules claude-provider' "$CODEX_HOME/config.toml" >/dev/null; then
+if [[ -f "$CODEX_HOME/config.toml" ]] && grep -E '^[[:space:]]*model_provider[[:space:]]*=[[:space:]]*"with_claude"|^[[:space:]]*model[[:space:]]*=[[:space:]]*"with-claude"|^[[:space:]]*\[model_providers\.with_claude\]|^# (BEGIN|END) codex-modules with-claude' "$CODEX_HOME/config.toml" >/dev/null; then
   fail "uninstall left claude provider config in config.toml"
 fi
 pass "uninstall removes provider config from sandbox config"

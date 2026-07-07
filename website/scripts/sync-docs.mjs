@@ -32,6 +32,7 @@ const MODULE_ORDER = [
   "lsp-sidecar",
   "scheduler",
   "teams",
+  "with-claude",
 ];
 
 // Strip the `<p align="right">…</p>` language switcher we add to every README;
@@ -64,10 +65,15 @@ function deriveDescription(body) {
   for (const block of blocks) {
     const t = block.trim();
     if (!t || t.startsWith("#") || t.startsWith("<") || t.startsWith("```") || t.startsWith("|")) continue;
+    const codeSpans = [];
     const plain = t
-      .replace(/`([^`]+)`/g, "$1")
+      .replace(/`([^`]+)`/g, (_, code) => {
+        codeSpans.push(code);
+        return `@@CODE${codeSpans.length - 1}@@`;
+      })
       .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
       .replace(/[*_]/g, "")
+      .replace(/@@CODE(\d+)@@/g, (_, index) => codeSpans[Number(index)] ?? "")
       .replace(/\s+/g, " ")
       .trim();
     if (plain.length < 10) continue;

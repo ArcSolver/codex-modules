@@ -11,7 +11,7 @@ fail() { printf 'FAIL: %s\n' "$1" >&2; exit 1; }
 
 [[ -f "$INDEX" && -f "$CLI" ]] || fail "build first: missing dist/index.js or dist/cli.js"
 
-TMP="$(mktemp -d "${TMPDIR:-/tmp}/codex-claude-provider-verify.XXXXXX")"
+TMP="$(mktemp -d "${TMPDIR:-/tmp}/codex-with-claude-verify.XXXXXX")"
 SERVER_PID=""
 cleanup() {
   if [[ -n "$SERVER_PID" ]] && kill -0 "$SERVER_PID" >/dev/null 2>&1; then
@@ -108,6 +108,16 @@ pass "ANTHROPIC_API_KEY without allow flag blocks serve"
 
 ANTHROPIC_API_KEY="synthetic-shadow-key" expect_cli_fail "ANTHROPIC_API_KEY blocks doctor" "$NODE_BIN" "$CLI" doctor --codex-home "$CODEX_HOME" --json
 pass "ANTHROPIC_API_KEY without allow flag blocks doctor"
+
+BAD_PROVIDER_HOME="$TMP/bad-provider-home"
+mkdir -p "$BAD_PROVIDER_HOME"
+if "$NODE_BIN" "$CLI" install --codex-home "$BAD_PROVIDER_HOME" --provider-id 'bad.provider' --json >"$TMP/bad-provider.out" 2>"$TMP/bad-provider.err"; then
+  fail "unsafe provider id unexpectedly installed"
+fi
+if [[ -e "$BAD_PROVIDER_HOME/config.toml" ]]; then
+  fail "unsafe provider id wrote config.toml before validation failure"
+fi
+pass "unsafe provider id is rejected before config write"
 
 TRACE="$TMP/fake-trace.jsonl"
 SERVER_OUT="$TMP/fake-server.out"
@@ -426,7 +436,7 @@ const output = await postSse(JSON.parse(outputText), {
   "x-client-request-id": "synthetic-tool-output"
 });
 assertTextSse(output, "final tool output");
-assert(extractText(output).includes("/tmp/codex-claude-provider-offline"), "final text did not include tool output");
+assert(extractText(output).includes("/tmp/codex-with-claude-offline"), "final text did not include tool output");
 
 const multiBody = readFixture("message-only-turn.json");
 multiBody.input[0].content[0].text = "[[fake:multi-tool]] Run two synthetic tools in sequence.";
@@ -477,6 +487,6 @@ assert(!/\bthinking\b|signature|raw Claude/i.test(fixtureText), "fixtures contai
 
 const stderr = fs.existsSync(serverErrPath) ? fs.readFileSync(serverErrPath, "utf8") : "";
 assert(!stderr.includes("[[fake:"), "default logs contain request body preview");
-assert(!stderr.includes("/tmp/codex-claude-provider-offline"), "default logs contain tool output preview");
+assert(!stderr.includes("/tmp/codex-with-claude-offline"), "default logs contain tool output preview");
 NODE
 pass "offline Responses SSE, replay, drain, fixtures, and security assertions passed"

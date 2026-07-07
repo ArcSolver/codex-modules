@@ -1,4 +1,4 @@
-// Adapted from .work/experiments/claude-provider-adapter/scripts/probe-roundtrip-bridge.mjs
+// Adapted from .work/experiments/with-claude-adapter/scripts/probe-roundtrip-bridge.mjs
 import http, { type IncomingMessage, type ServerResponse } from "node:http";
 import { AgentSdkClaudeBackend } from "./agent-sdk-backend.js";
 import type { ClaudeBackend, ClaudeBridgeEvent, ClaudeSession, PendingToolCallView } from "./claude-backend.js";

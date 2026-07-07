@@ -8,7 +8,7 @@ import { createFakeClaudeBackend } from "./fake-claude-backend.mjs";
 const tracePath = process.env.FAKE_CLAUDE_TRACE ?? "";
 const host = process.env.FAKE_CLAUDE_HOST ?? "127.0.0.1";
 const adapterHost = process.env.FAKE_CLAUDE_ADAPTER_HOST ?? "127.0.0.1";
-const model = process.env.FAKE_CLAUDE_MODEL ?? "claude-provider";
+const model = process.env.FAKE_CLAUDE_MODEL ?? "with-claude";
 
 function trace(type, payload = {}) {
   if (!tracePath) return;
@@ -101,7 +101,7 @@ const proxy = makeProxy(adapter.baseUrl);
 const proxyAddress = await listen(proxy, host);
 const baseUrl = `http://${proxyAddress.address}:${proxyAddress.port}/v1`;
 trace("fake_server_started", { baseUrl, adapterBaseUrl: adapter.baseUrl });
-console.log(JSON.stringify({ baseUrl, providerId: "claude_provider", adapterBaseUrl: adapter.baseUrl }));
+console.log(JSON.stringify({ baseUrl, providerId: "with_claude", adapterBaseUrl: adapter.baseUrl }));
 
 let closing = false;
 async function closeAndExit(code) {

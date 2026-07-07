@@ -3,8 +3,8 @@ import type { ClaudeBackend } from "./claude-backend.js";
 
 export const DEFAULT_HOST = "127.0.0.1";
 export const DEFAULT_PORT = 47777;
-export const DEFAULT_PROVIDER_ID = "claude_provider";
-export const DEFAULT_MODEL = "claude-provider";
+export const DEFAULT_PROVIDER_ID = "with_claude";
+export const DEFAULT_MODEL = "with-claude";
 
 export type AdapterTimeouts = {
   bodyReadMs: number;

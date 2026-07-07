@@ -34,6 +34,7 @@ for normal releases. It publishes with npm trusted publishing, so no
    - `lsp-sidecar`
    - `scheduler`
    - `teams`
+   - `with-claude`
 4. Enter the exact version from `modules/<name>/package.json`.
 5. Run the workflow.
 
@@ -70,7 +71,7 @@ cd modules/<name> && npm pack --dry-run
 # 3. Publish (config-kit first by convention; there are no runtime
 #    cross-dependencies, so order is not load-bearing)
 for m in config-kit hooks skills mcp-manager subagents custom-models \
-         session-recall lsp-sidecar scheduler teams; do
+         session-recall lsp-sidecar scheduler teams with-claude; do
   (cd modules/$m && script -q /dev/null npm publish)
 done
 ```
@@ -81,7 +82,8 @@ done
 - Bump versions manually per module (they are versioned independently).
 - Prefer the `Release module` workflow. Use manual publishing only as a
   fallback.
-- Tarball contents are limited by `files` to `dist/`, `README.md`,
-  `LICENSE`, `package.json` — source and verify scripts do not ship.
+- Tarball contents are limited by `files` to runtime artifacts, package docs,
+  `LICENSE`, and npm's implicit `package.json` — source and verify scripts do
+  not ship.
 - The `codex-config-kit` core ships vendored inside each module's
   `dist/kit/`; modules never depend on each other at runtime.

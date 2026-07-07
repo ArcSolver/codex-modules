@@ -1,6 +1,6 @@
 {
-  "model": "claude-provider",
-  "instructions": "Synthetic offline verify fixture. Unsupported schemas must not reach Claude.",
+  "model": "with-claude",
+  "instructions": "Synthetic offline verify fixture. __CALL_ID__ is replaced by verify.sh.",
   "input": [
     {
       "type": "message",
@@ -8,9 +8,20 @@
       "content": [
         {
           "type": "input_text",
-          "text": "[[fake:instant-result]] Report available supported tools only."
+          "text": "[[fake:tool-once]] Use exec_command to print the current workspace path."
         }
       ]
+    },
+    {
+      "type": "function_call",
+      "name": "exec_command",
+      "call_id": "__CALL_ID__",
+      "arguments": "{\"cmd\":\"pwd\"}"
+    },
+    {
+      "type": "function_call_output",
+      "call_id": "__CALL_ID__",
+      "output": "/tmp/codex-with-claude-offline\n"
     }
   ],
   "tools": [
@@ -28,14 +39,6 @@
         },
         "required": ["cmd"]
       }
-    },
-    {
-      "type": "function",
-      "name": "unsupported_recursive",
-      "description": "Synthetic unsupported schema.",
-      "parameters": {
-        "$ref": "#"
-      }
     }
   ],
   "tool_choice": "auto",
@@ -44,8 +47,8 @@
   "store": false,
   "stream": true,
   "include": [],
-  "prompt_cache_key": "synthetic-session-unsupported",
+  "prompt_cache_key": "synthetic-session-main",
   "client_metadata": {
-    "verify": "unsupported-schema"
+    "verify": "function-call-output"
   }
 }

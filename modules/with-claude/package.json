@@ -1,7 +1,7 @@
 {
-  "name": "@codex-modules/claude-provider",
+  "name": "@codex-modules/with-claude",
   "version": "0.1.0",
-  "description": "Personal localhost provider adapter for Codex custom providers backed by Claude.",
+  "description": "Local Codex provider adapter backed by the Claude Agent SDK while Codex keeps tool execution.",
   "keywords": [
     "codex",
     "openai-codex",
@@ -11,16 +11,16 @@
   ],
   "license": "MIT",
   "author": "ArcSolver <hailo.dev01@gmail.com>",
-  "homepage": "https://github.com/ArcSolver/codex-modules/tree/main/modules/claude-provider#readme",
+  "homepage": "https://github.com/ArcSolver/codex-modules/tree/main/modules/with-claude#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ArcSolver/codex-modules.git",
-    "directory": "modules/claude-provider"
+    "directory": "modules/with-claude"
   },
   "bugs": "https://github.com/ArcSolver/codex-modules/issues",
   "type": "module",
   "bin": {
-    "codex-claude-provider": "dist/cli.js"
+    "codex-with-claude": "dist/cli.js"
   },
   "exports": {
     ".": {
@@ -31,7 +31,9 @@
   "files": [
     "dist",
     "README.md",
-    "README.ko.md"
+    "README.ko.md",
+    "CHANGELOG.md",
+    "LICENSE"
   ],
   "engines": {
     "node": ">=24.0.0"

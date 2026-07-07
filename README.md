@@ -24,7 +24,7 @@ codex-modules is a collection of production-quality modules for extending and cu
 | `lsp-sidecar` | `@codex-modules/lsp-sidecar` | Give Codex code intelligence via MCP: LSP diagnostics, definition, hover, and workspace symbols | alpha |
 | `scheduler` | `@codex-modules/scheduler` | Schedule safe, opt-in `codex exec` jobs with cron/interval parsing, wake gates, and dry-run defaults | alpha |
 | `teams` | `@codex-modules/teams` | Declare custom agent teams as data and run them on Codex's stable multi-agent tools, with durable task state and rollback-safe installs | alpha |
-| `claude-provider` | `@codex-modules/claude-provider` | Personal localhost provider adapter: serve Codex's Responses wire from the Claude Agent SDK while Codex keeps owning tool execution and approvals | alpha |
+| `with-claude` | `@codex-modules/with-claude` | Personal localhost provider adapter: serve Codex's Responses wire from the Claude Agent SDK while Codex keeps owning tool execution and approvals | alpha |
 
 ## Getting Started
 

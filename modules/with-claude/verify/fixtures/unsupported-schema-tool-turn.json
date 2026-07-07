@@ -1,6 +1,6 @@
 {
-  "model": "claude-provider",
-  "instructions": "Synthetic offline verify fixture. Do not use external services.",
+  "model": "with-claude",
+  "instructions": "Synthetic offline verify fixture. Unsupported schemas must not reach Claude.",
   "input": [
     {
       "type": "message",
@@ -8,7 +8,7 @@
       "content": [
         {
           "type": "input_text",
-          "text": "[[fake:tool-once]] Use exec_command to print the current workspace path."
+          "text": "[[fake:instant-result]] Report available supported tools only."
         }
       ]
     }
@@ -28,6 +28,14 @@
         },
         "required": ["cmd"]
       }
+    },
+    {
+      "type": "function",
+      "name": "unsupported_recursive",
+      "description": "Synthetic unsupported schema.",
+      "parameters": {
+        "$ref": "#"
+      }
     }
   ],
   "tool_choice": "auto",
@@ -36,8 +44,8 @@
   "store": false,
   "stream": true,
   "include": [],
-  "prompt_cache_key": "synthetic-session-main",
+  "prompt_cache_key": "synthetic-session-unsupported",
   "client_metadata": {
-    "verify": "message-only"
+    "verify": "unsupported-schema"
   }
 }

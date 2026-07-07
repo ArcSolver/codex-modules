@@ -1,4 +1,4 @@
-// Adapted from .work/experiments/claude-provider-adapter/scripts/probe-roundtrip-bridge.mjs
+// Adapted from .work/experiments/with-claude-adapter/scripts/probe-roundtrip-bridge.mjs
 import { createSdkMcpServer, query, tool } from "@anthropic-ai/claude-agent-sdk";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { ClaudeBackend, ClaudeBridgeEvent, ClaudeSession, ClaudeStartOptions, PendingToolCallView } from "./claude-backend.js";

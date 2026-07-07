@@ -1,6 +1,6 @@
 {
-  "model": "claude-provider",
-  "instructions": "Synthetic offline verify fixture. __CALL_ID__ is replaced by verify.sh.",
+  "model": "with-claude",
+  "instructions": "Synthetic offline verify fixture. Namespace and web_search tools must be ignored.",
   "input": [
     {
       "type": "message",
@@ -8,20 +8,9 @@
       "content": [
         {
           "type": "input_text",
-          "text": "[[fake:tool-once]] Use exec_command to print the current workspace path."
+          "text": "[[fake:instant-result]] Report available supported tools only."
         }
       ]
-    },
-    {
-      "type": "function_call",
-      "name": "exec_command",
-      "call_id": "__CALL_ID__",
-      "arguments": "{\"cmd\":\"pwd\"}"
-    },
-    {
-      "type": "function_call_output",
-      "call_id": "__CALL_ID__",
-      "output": "/tmp/codex-claude-provider-offline\n"
     }
   ],
   "tools": [
@@ -39,6 +28,15 @@
         },
         "required": ["cmd"]
       }
+    },
+    {
+      "type": "namespace",
+      "namespace": "web",
+      "name": "open"
+    },
+    {
+      "type": "web_search",
+      "name": "web_search"
     }
   ],
   "tool_choice": "auto",
@@ -47,8 +45,8 @@
   "store": false,
   "stream": true,
   "include": [],
-  "prompt_cache_key": "synthetic-session-main",
+  "prompt_cache_key": "synthetic-session-namespace",
   "client_metadata": {
-    "verify": "function-call-output"
+    "verify": "namespace-web-search"
   }
 }

@@ -1,4 +1,4 @@
-// Adapted from .work/experiments/claude-provider-adapter/scripts/probe-roundtrip-bridge.mjs
+// Adapted from .work/experiments/with-claude-adapter/scripts/probe-roundtrip-bridge.mjs
 import type { ClaudeBridgeEvent, ClaudeSession, PendingToolCallView } from "./claude-backend.js";
 import type { ReplayableSseFrame } from "./types.js";
 

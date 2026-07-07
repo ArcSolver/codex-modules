@@ -1,6 +1,6 @@
 {
-  "model": "claude-provider",
-  "instructions": "Synthetic offline verify fixture. Namespace and web_search tools must be ignored.",
+  "model": "with-claude",
+  "instructions": "Synthetic offline verify fixture. Do not use external services.",
   "input": [
     {
       "type": "message",
@@ -8,7 +8,7 @@
       "content": [
         {
           "type": "input_text",
-          "text": "[[fake:instant-result]] Report available supported tools only."
+          "text": "[[fake:tool-once]] Use exec_command to print the current workspace path."
         }
       ]
     }
@@ -28,15 +28,6 @@
         },
         "required": ["cmd"]
       }
-    },
-    {
-      "type": "namespace",
-      "namespace": "web",
-      "name": "open"
-    },
-    {
-      "type": "web_search",
-      "name": "web_search"
     }
   ],
   "tool_choice": "auto",
@@ -45,8 +36,8 @@
   "store": false,
   "stream": true,
   "include": [],
-  "prompt_cache_key": "synthetic-session-namespace",
+  "prompt_cache_key": "synthetic-session-main",
   "client_metadata": {
-    "verify": "namespace-web-search"
+    "verify": "message-only"
   }
 }

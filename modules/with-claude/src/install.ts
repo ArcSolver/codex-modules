@@ -12,12 +12,12 @@ import {
   type UninstallResult,
 } from "./types.js";
 
-const BEGIN = "# BEGIN codex-modules claude-provider";
-const END = "# END codex-modules claude-provider";
-const BOUNDARY_TABLE = "[codex_modules.claude_provider_boundary]";
+const BEGIN = "# BEGIN codex-modules with-claude";
+const END = "# END codex-modules with-claude";
+const BOUNDARY_TABLE = "[codex_modules.with_claude_boundary]";
 
 type Manifest = {
-  module: "claude-provider";
+  module: "with-claude";
   providerId: string;
   model: string;
   baseUrl: string;
@@ -32,7 +32,7 @@ type Manifest = {
 
 export async function installProvider(options: InstallOptions): Promise<InstallResult> {
   const codexHome = requireCodexHome(options.codexHome);
-  const providerId = options.providerId ?? DEFAULT_PROVIDER_ID;
+  const providerId = validateProviderId(options.providerId ?? DEFAULT_PROVIDER_ID);
   const model = options.model ?? DEFAULT_MODEL;
   const baseUrl = options.baseUrl ?? `http://127.0.0.1:${DEFAULT_PORT}/v1`;
   const configPath = join(codexHome, "config.toml");
@@ -41,9 +41,8 @@ export async function installProvider(options: InstallOptions): Promise<InstallR
   await mkdir(dirname(manifestPath), { recursive: true });
 
   const original = await readExisting(configPath);
-  const backupPath = `${configPath}.codex-claude-provider.${timestamp()}.bak`;
-  await writeFile(configPath, original, "utf8");
-  await copyFile(configPath, backupPath);
+  const backupPath = `${configPath}.codex-with-claude.${timestamp()}.bak`;
+  await writeFile(backupPath, original, "utf8");
 
   const withoutOld = removeBoundary(removeSentinel(original));
   const preInstallTopLevel = {
@@ -59,7 +58,7 @@ export async function installProvider(options: InstallOptions): Promise<InstallR
   }
   await writeFile(configPath, next, "utf8");
   const manifest: Manifest = {
-    module: "claude-provider",
+    module: "with-claude",
     providerId,
     model,
     baseUrl,
@@ -110,14 +109,14 @@ export function requireCodexHome(value?: string): string {
 }
 
 export function manifestPathFor(codexHome: string): string {
-  return join(codexHome, "codex-modules", "claude-provider-install.json");
+  return join(codexHome, "codex-modules", "with-claude-install.json");
 }
 
 function providerBlock(providerId: string, baseUrl: string): string {
   return [
     BEGIN,
     `[model_providers.${providerId}]`,
-    'name = "Claude Provider"',
+    'name = "With Claude"',
     `base_url = "${escapeToml(baseUrl)}"`,
     'wire_api = "responses"',
     END,
@@ -193,4 +192,11 @@ function escapeToml(value: string): string {
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function validateProviderId(value: string): string {
+  if (!/^[A-Za-z0-9_][A-Za-z0-9_-]*$/.test(value)) {
+    throw new Error("providerId must be a TOML bare key segment: letters, digits, underscores, or dashes, and not start with a dash");
+  }
+  return value;
 }
