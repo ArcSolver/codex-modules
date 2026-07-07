@@ -13,6 +13,7 @@ export default defineConfig({
       title: "codex-modules",
       description:
         "Small, self-contained modules that make the official OpenAI Codex app/CLI truly yours.",
+      customCss: ["./src/styles/arcyou-theme.css"],
       social: [
         { icon: "github", label: "GitHub", href: "https://github.com/ArcSolver/codex-modules" },
       ],
