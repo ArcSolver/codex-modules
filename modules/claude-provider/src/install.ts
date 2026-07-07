@@ -14,6 +14,7 @@ import {
 
 const BEGIN = "# BEGIN codex-modules claude-provider";
 const END = "# END codex-modules claude-provider";
+const BOUNDARY_TABLE = "[codex_modules.claude_provider_boundary]";
 
 type Manifest = {
   module: "claude-provider";
@@ -44,13 +45,14 @@ export async function installProvider(options: InstallOptions): Promise<InstallR
   await writeFile(configPath, original, "utf8");
   await copyFile(configPath, backupPath);
 
-  const withoutOld = removeSentinel(original);
+  const withoutOld = removeBoundary(removeSentinel(original));
   const preInstallTopLevel = {
     model: readTopLevel(withoutOld, "model"),
     model_provider: readTopLevel(withoutOld, "model_provider"),
   };
   const block = providerBlock(providerId, baseUrl);
   let next = appendBlock(withoutOld, block);
+  next = appendBlock(next, boundaryBlock());
   if (options.setDefault) {
     next = upsertTopLevel(next, "model", model);
     next = upsertTopLevel(next, "model_provider", providerId);
@@ -91,7 +93,7 @@ export async function uninstallProvider(options: UninstallOptions): Promise<Unin
   if (hashString(block) !== manifest.sentinelRangeHash) {
     return { ok: false, codexHome, configPath, manifestPath, backupPath: manifest.backupPath, conflict: "sentinel block changed after install" };
   }
-  let next = removeSentinel(current);
+  let next = removeBoundary(removeSentinel(current));
   if (manifest.setDefault) {
     next = restoreTopLevel(next, "model", manifest.installedTopLevel.model, manifest.preInstallTopLevel.model);
     next = restoreTopLevel(next, "model_provider", manifest.installedTopLevel.model_provider, manifest.preInstallTopLevel.model_provider);
@@ -123,6 +125,12 @@ function providerBlock(providerId: string, baseUrl: string): string {
   ].join("\n");
 }
 
+function boundaryBlock(): string {
+  // Keeps later Codex-managed tables from being attached to the provider
+  // block's trailing comments by TOML-preserving rewrites.
+  return `${BOUNDARY_TABLE}\n`;
+}
+
 function appendBlock(config: string, block: string): string {
   const trimmed = config.trimEnd();
   return `${trimmed}${trimmed ? "\n\n" : ""}${block}`;
@@ -132,6 +140,12 @@ function removeSentinel(config: string): string {
   const escapedBegin = escapeRegExp(BEGIN);
   const escapedEnd = escapeRegExp(END);
   return config.replace(new RegExp(`\\n?${escapedBegin}[\\s\\S]*?${escapedEnd}\\n?`, "m"), "\n").replace(/\n{3,}/g, "\n\n");
+}
+
+function removeBoundary(config: string): string {
+  return config
+    .replace(new RegExp(`\\n?${escapeRegExp(BOUNDARY_TABLE)}\\n?`, "m"), "\n")
+    .replace(/\n{3,}/g, "\n\n");
 }
 
 function extractSentinel(config: string): string | undefined {

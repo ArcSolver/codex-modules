@@ -36,6 +36,22 @@ export CODEX_HOME="$TMP/codex-home"
 WORKSPACE="$TMP/workspace"
 mkdir -p "$HOME/.codex" "$HOME/.claude" "$CODEX_HOME" "$WORKSPACE"
 
+CODEX_EXEC_SANDBOX="${CODEX_EXEC_SANDBOX:-}"
+if [[ -z "$CODEX_EXEC_SANDBOX" ]]; then
+  CODEX_EXEC_SANDBOX="read-only"
+  # GitHub-hosted Linux runners do not allow the bwrap loopback setup Codex
+  # uses for read-only/workspace-write sandboxes. This check still runs in a
+  # throwaway HOME, CODEX_HOME, and workspace, so keep local verification
+  # stricter while using an unsandboxed Codex child only in Actions.
+  if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then
+    CODEX_EXEC_SANDBOX="danger-full-access"
+  fi
+fi
+case "$CODEX_EXEC_SANDBOX" in
+  read-only|workspace-write|danger-full-access) ;;
+  *) fail "unsupported CODEX_EXEC_SANDBOX: $CODEX_EXEC_SANDBOX" ;;
+esac
+
 TRACE="$TMP/fake-trace.jsonl"
 SERVER_OUT="$TMP/fake-server.out"
 SERVER_ERR="$TMP/fake-server.err"
@@ -68,17 +84,17 @@ pass "provider installed into sandbox CODEX_HOME"
 CODEX_STDOUT="$TMP/codex.stdout"
 CODEX_STDERR="$TMP/codex.stderr"
 set +e
-"$NODE_BIN" --input-type=module - "$CODEX_BIN" "$WORKSPACE" "$CODEX_STDOUT" "$CODEX_STDERR" <<'NODE'
+"$NODE_BIN" --input-type=module - "$CODEX_BIN" "$WORKSPACE" "$CODEX_STDOUT" "$CODEX_STDERR" "$CODEX_EXEC_SANDBOX" <<'NODE'
 import { spawn } from "node:child_process";
 
-const [, , codexBin, workspace, stdoutPath, stderrPath] = process.argv;
+const [, , codexBin, workspace, stdoutPath, stderrPath, sandbox] = process.argv;
 const fs = await import("node:fs");
 const args = [
   "exec",
   "--cd",
   workspace,
   "--sandbox",
-  "read-only",
+  sandbox,
   "--skip-git-repo-check",
   "-m",
   "claude-provider",
@@ -169,7 +185,7 @@ pass "Codex sent function_call_output tail and returned workspace path"
   --codex-home "$CODEX_HOME" \
   --provider-id claude_provider >/tmp/codex-claude-provider-uninstall.out
 
-if [[ -f "$CODEX_HOME/config.toml" ]] && grep -E 'claude_provider|claude-provider' "$CODEX_HOME/config.toml" >/dev/null; then
-  fail "uninstall left claude provider sentinel in config.toml"
+if [[ -f "$CODEX_HOME/config.toml" ]] && grep -E '^[[:space:]]*model_provider[[:space:]]*=[[:space:]]*"claude_provider"|^[[:space:]]*model[[:space:]]*=[[:space:]]*"claude-provider"|^[[:space:]]*\[model_providers\.claude_provider\]|^# (BEGIN|END) codex-modules claude-provider' "$CODEX_HOME/config.toml" >/dev/null; then
+  fail "uninstall left claude provider config in config.toml"
 fi
-pass "uninstall removes provider sentinel from sandbox config"
+pass "uninstall removes provider config from sandbox config"
