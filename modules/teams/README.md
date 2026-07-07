@@ -131,6 +131,8 @@ Project state lives in:
 
 `state.json` and `tasks.json` are written atomically under a mkdir lock. `journal.jsonl` is append-only under the same lock. Task claims use leases; expired claims are reclaimed by `task claim` and `task list --reclaim`. Claimed tasks can be returned to open with `task reopen`; done and failed tasks are terminal. `task complete --meta <json>` stores optional structured result metadata, and `note add/list --task <task-id>` records and filters task-scoped notes. `CODEX_TEAMS_NOW` can override time for deterministic tests.
 
+State files are versioned as `version: 1`. New fields are additive within that version, and older v1 `tasks.json` or `journal.jsonl` files are intentionally kept readable instead of migrated in place. Removing that compatibility requires an explicit state-format bump.
+
 Leader state commands are for the leader or a human operator. Members report through their final `TEAM-RESULT: <one-line summary>` line. Workspace-write members may also leave optional artifacts, but the final message is the canonical result channel.
 
 `doctor` reports the Codex binary, version, native feature state, model catalog availability, write access, and installed teams split into user and project scopes. Use `--state-dir <dir>` to check an alternate team state directory. `multi_agent` must be stable and enabled for a healthy native workflow. `enable_fanout` and `multi_agent_v2` are reported as under-development surfaces only.

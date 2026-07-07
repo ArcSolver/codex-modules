@@ -131,6 +131,8 @@ Install은 각 member를 다음 필드가 있는 TOML로 렌더합니다:
 
 `state.json`과 `tasks.json`은 mkdir lock 안에서 atomic write로 저장됩니다. `journal.jsonl`은 같은 lock 안에서 append-only로 추가됩니다. Task claim은 lease를 사용하며, 만료된 claim은 `task claim`과 `task list --reclaim`에서 회수됩니다. Claimed task는 `task reopen`으로 open 상태로 되돌릴 수 있고, done/failed task는 terminal입니다. `task complete --meta <json>`은 선택적 구조화 결과 metadata를 저장하고, `note add/list --task <task-id>`는 task-scoped note를 기록하고 필터링합니다. 결정론적 테스트에는 `CODEX_TEAMS_NOW`로 시간을 override할 수 있습니다.
 
+State file은 `version: 1`로 versioning됩니다. 해당 version 안의 새 field는 additive로만 추가하며, 이전 v1 `tasks.json` 또는 `journal.jsonl` 파일은 in-place migration 없이 계속 읽을 수 있게 유지합니다. 이 호환성을 제거하려면 명시적인 state-format bump가 필요합니다.
+
 상태 CLI는 리더 또는 사람이 호출하는 표면입니다. 멤버는 마지막 `TEAM-RESULT: <one-line summary>` 줄로 보고합니다. Workspace-write 멤버는 선택적으로 artifact를 남길 수 있지만, canonical 결과 채널은 final message입니다.
 
 `doctor`는 Codex binary, version, native feature state, model catalog availability, write access, installed teams를 user/project scope로 나눠 보고합니다. 다른 team state directory를 확인하려면 `--state-dir <dir>`를 사용합니다. 건강한 native workflow에는 `multi_agent`가 stable and enabled여야 합니다. `enable_fanout`과 `multi_agent_v2`는 under-development surface로만 보고합니다.
