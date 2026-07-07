@@ -13,6 +13,7 @@ import {
   initState,
   listNotes,
   listTasks,
+  reopenTask,
   showState,
 } from "./state.js";
 import { collectTeamErrors, parseTeamJson, writePreset } from "./team.js";
@@ -50,11 +51,12 @@ const FLAG_SPECS = {
   "member bind": { "agent-id": "value", "state-dir": "value", nickname: "value" },
   "task add": { "state-dir": "value", title: "value", detail: "value", "depends-on": "value" },
   "task claim": { "state-dir": "value", actor: "value", "lease-sec": "value" },
-  "task complete": { "state-dir": "value", actor: "value", result: "value" },
+  "task complete": { "state-dir": "value", actor: "value", result: "value", meta: "value" },
   "task fail": { "state-dir": "value", actor: "value", result: "value" },
+  "task reopen": { "state-dir": "value", actor: "value" },
   "task list": { "state-dir": "value", reclaim: "boolean", json: "boolean" },
-  "note add": { "state-dir": "value", actor: "value", text: "value", kind: "value" },
-  "note list": { "state-dir": "value", json: "boolean" },
+  "note add": { "state-dir": "value", actor: "value", text: "value", kind: "value", task: "value" },
+  "note list": { "state-dir": "value", json: "boolean", task: "value" },
 } as const satisfies Record<string, FlagSpec>;
 
 export async function main(args: string[]): Promise<void> {
@@ -267,23 +269,39 @@ function handleTask(args: string[]): void {
   if (subcommand === "complete" || subcommand === "fail") {
     const parsed = parseArgs(rest, subcommand === "complete" ? "task complete" : "task fail");
     const [team, taskId] = parsed.positional;
-    if (!team) throw new Error("usage: codex-teams task add|claim|complete|fail|list <team>");
+    if (!team) throw new Error("usage: codex-teams task add|claim|complete|fail|reopen|list <team>");
     if (!taskId) throw new Error(`usage: codex-teams task ${subcommand} <team> <task-id> --actor <name>`);
     const opts = { stateDir: flag(parsed, "state-dir") };
-    console.log(JSON.stringify(completeTask(team, taskId, { actor: requiredFlag(parsed, "actor"), result: flag(parsed, "result"), failed: subcommand === "fail" }, opts), null, 2));
+    const input: { actor: string; result?: string; resultMeta?: unknown; failed?: boolean } = {
+      actor: requiredFlag(parsed, "actor"),
+      result: flag(parsed, "result"),
+      failed: subcommand === "fail",
+    };
+    const meta = flag(parsed, "meta");
+    if (meta !== undefined) input.resultMeta = parseMeta(meta);
+    console.log(JSON.stringify(completeTask(team, taskId, input, opts), null, 2));
+    return;
+  }
+  if (subcommand === "reopen") {
+    const parsed = parseArgs(rest, "task reopen");
+    const [team, taskId] = parsed.positional;
+    if (!team) throw new Error("usage: codex-teams task add|claim|complete|fail|reopen|list <team>");
+    if (!taskId) throw new Error("usage: codex-teams task reopen <team> <task-id> --actor <name>");
+    const opts = { stateDir: flag(parsed, "state-dir") };
+    console.log(JSON.stringify(reopenTask(team, taskId, { actor: requiredFlag(parsed, "actor") }, opts), null, 2));
     return;
   }
   if (subcommand === "list") {
     const parsed = parseArgs(rest, "task list");
     const [team] = parsed.positional;
-    if (!team) throw new Error("usage: codex-teams task add|claim|complete|fail|list <team>");
+    if (!team) throw new Error("usage: codex-teams task add|claim|complete|fail|reopen|list <team>");
     const opts = { stateDir: flag(parsed, "state-dir") };
     const tasks = listTasks(team, { ...opts, reclaim: boolFlag(parsed, "reclaim") });
     if (boolFlag(parsed, "json")) console.log(JSON.stringify(tasks, null, 2));
     else for (const task of tasks.tasks) console.log(`${task.id}\t${task.status}\t${task.title}`);
     return;
   }
-  throw new Error("usage: codex-teams task add|claim|complete|fail|list <team>");
+  throw new Error("usage: codex-teams task add|claim|complete|fail|reopen|list <team>");
 }
 
 function handleNote(args: string[]): void {
@@ -293,7 +311,7 @@ function handleNote(args: string[]): void {
     const team = parsed.positional[0];
     if (!team) throw new Error("usage: codex-teams note add|list <team>");
     const opts = { stateDir: flag(parsed, "state-dir") };
-    console.log(JSON.stringify(addNote(team, { actor: requiredFlag(parsed, "actor"), text: requiredFlag(parsed, "text"), kind: kindFlag(parsed) }, opts), null, 2));
+    console.log(JSON.stringify(addNote(team, { actor: requiredFlag(parsed, "actor"), text: requiredFlag(parsed, "text"), kind: kindFlag(parsed), taskId: flag(parsed, "task") }, opts), null, 2));
     return;
   }
   if (subcommand === "list") {
@@ -301,7 +319,7 @@ function handleNote(args: string[]): void {
     const team = parsed.positional[0];
     if (!team) throw new Error("usage: codex-teams note add|list <team>");
     const opts = { stateDir: flag(parsed, "state-dir") };
-    const notes = listNotes(team, opts);
+    const notes = listNotes(team, { ...opts, taskId: flag(parsed, "task") });
     if (boolFlag(parsed, "json")) console.log(JSON.stringify(notes, null, 2));
     else for (const note of notes) console.log(`${note.ts}\t${note.actor}\t${note.kind}\t${note.text}`);
     return;
@@ -399,6 +417,15 @@ function kindFlag(parsed: ParsedArgs): "note" | "handoff" | "decision" | undefin
   return value;
 }
 
+function parseMeta(value: string): unknown {
+  try {
+    return JSON.parse(value) as unknown;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`--meta must be valid JSON: ${message}`);
+  }
+}
+
 function splitCsv(value: string | undefined): string[] | undefined {
   return value ? value.split(",").map(item => item.trim()).filter(Boolean) : undefined;
 }
@@ -423,6 +450,6 @@ Usage:
   codex-teams run <team.json> --goal <text> [--codex-home <dir>] [--state-dir <dir>] [--execute --allow-codex] [-s workspace-write] [--timeout-sec N] [--stall-sec N]
   codex-teams state init|show|finish <team>
   codex-teams member bind <team> <member> --agent-id <id>
-  codex-teams task add|claim|complete|fail|list <team>
+  codex-teams task add|claim|complete|fail|reopen|list <team>
   codex-teams note add|list <team>`);
 }

@@ -68,7 +68,12 @@ Start durable state in the project:
 codex-teams state init review-panel --goal "Review this change"
 codex-teams task add review-panel --title "Security review"
 codex-teams task claim review-panel task-001 --actor security
+codex-teams task complete review-panel task-001 --actor security --result "No blocking issues" --meta '{"severity":"low"}'
+codex-teams task add review-panel --title "Retry flaky check"
+codex-teams task claim review-panel task-002 --actor security
+codex-teams task reopen review-panel task-002 --actor leader
 codex-teams note add review-panel --actor leader --text "Security and correctness can run in parallel"
+codex-teams note add review-panel --actor leader --task task-001 --text "Follow up on auth edge cases"
 ```
 
 Run is dry-run by default:
@@ -124,7 +129,7 @@ Project state lives in:
   locks/
 ```
 
-`state.json` and `tasks.json` are written atomically under a mkdir lock. `journal.jsonl` is append-only under the same lock. Task claims use leases; expired claims are reclaimed by `task claim` and `task list --reclaim`. `CODEX_TEAMS_NOW` can override time for deterministic tests.
+`state.json` and `tasks.json` are written atomically under a mkdir lock. `journal.jsonl` is append-only under the same lock. Task claims use leases; expired claims are reclaimed by `task claim` and `task list --reclaim`. Claimed tasks can be returned to open with `task reopen`; done and failed tasks are terminal. `task complete --meta <json>` stores optional structured result metadata, and `note add/list --task <task-id>` records and filters task-scoped notes. `CODEX_TEAMS_NOW` can override time for deterministic tests.
 
 Leader state commands are for the leader or a human operator. Members report through their final `TEAM-RESULT: <one-line summary>` line. Workspace-write members may also leave optional artifacts, but the final message is the canonical result channel.
 

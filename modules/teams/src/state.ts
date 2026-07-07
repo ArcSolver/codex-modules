@@ -153,7 +153,7 @@ export function claimTask(
 export function completeTask(
   team: string,
   taskId: string,
-  input: { actor: string; result?: string; failed?: boolean },
+  input: { actor: string; result?: string; resultMeta?: unknown; failed?: boolean },
   opts: StateOptions = {},
 ): TaskRecord {
   assertMemberName(input.actor);
@@ -164,6 +164,27 @@ export function completeTask(
     }
     task.status = input.failed ? "failed" : "done";
     task.result = input.result;
+    if (!input.failed && Object.prototype.hasOwnProperty.call(input, "resultMeta")) task.result_meta = input.resultMeta;
+    task.lease_expires_at = undefined;
+    task.updated_at = nowIso(opts.env);
+    return task;
+  });
+}
+
+export function reopenTask(
+  team: string,
+  taskId: string,
+  input: { actor: string },
+  opts: StateOptions = {},
+): TaskRecord {
+  assertMemberName(input.actor);
+  return withTaskMutation(team, opts, tasks => {
+    const task = mustFindTask(tasks, taskId);
+    if (task.status === "open") throw new Error(`task ${taskId} is already open; only claimed tasks can be reopened`);
+    if (task.status === "done") throw new Error(`task ${taskId} is done; only claimed tasks can be reopened`);
+    if (task.status === "failed") throw new Error(`task ${taskId} is failed; only claimed tasks can be reopened`);
+    task.status = "open";
+    task.claimed_by = undefined;
     task.lease_expires_at = undefined;
     task.updated_at = nowIso(opts.env);
     return task;
@@ -180,7 +201,7 @@ export function listTasks(team: string, opts: StateOptions & { reclaim?: boolean
 
 export function addNote(
   team: string,
-  input: { actor: string; text: string; kind?: JournalKind },
+  input: { actor: string; text: string; kind?: JournalKind; taskId?: string },
   opts: StateOptions = {},
 ): JournalEntry {
   assertMemberName(input.actor);
@@ -188,19 +209,25 @@ export function addNote(
   const kind = input.kind ?? "note";
   if (kind !== "note" && kind !== "handoff" && kind !== "decision") throw new Error("kind must be note, handoff, or decision");
   return withTeamLock(team, opts, () => {
+    if (input.taskId) {
+      const tasks = loadTasks(team, opts);
+      if (!tasks.tasks.some(task => task.id === input.taskId)) throw new Error(`unknown task for note: ${input.taskId}`);
+    }
     const entry: JournalEntry = { ts: nowIso(opts.env), actor: input.actor, kind, text: input.text };
+    if (input.taskId) entry.task_id = input.taskId;
     appendFileSync(join(teamDir(team, opts), "journal.jsonl"), `${JSON.stringify(entry)}\n`, { mode: 0o600 });
     return entry;
   });
 }
 
-export function listNotes(team: string, opts: StateOptions = {}): JournalEntry[] {
+export function listNotes(team: string, opts: StateOptions & { taskId?: string } = {}): JournalEntry[] {
   const path = join(teamDir(team, opts), "journal.jsonl");
   if (!existsSync(path)) return [];
-  return readFileSync(path, "utf8")
+  const notes = readFileSync(path, "utf8")
     .split(/\r?\n/)
     .filter(Boolean)
     .map(line => JSON.parse(line) as JournalEntry);
+  return opts.taskId ? notes.filter(note => note.task_id === opts.taskId) : notes;
 }
 
 export function loadTasks(team: string, opts: StateOptions = {}): TasksFile {

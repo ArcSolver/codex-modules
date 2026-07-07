@@ -11,8 +11,8 @@ Use the stable native multi-agent tool path only:
 1. Load tools with tool_search for multi_agent_v1.spawn_agent, wait, close, resume, and send_input.
 2. Start durable state before spawning: codex-teams state init golden --goal 'Golden baseline goal with '\''single quotes'\'''
 3. After each spawn, record the returned agent id: codex-teams member bind golden <member> --agent-id <id> --nickname <nick>
-4. Track work with codex-teams task add, task claim, task complete, and task fail. Use codex-teams note add for shared observations.
-5. Spawn only independent tasks concurrently. Join with wait. If a member fails, close it and return its claimed task to a safe state.
+4. Track work with codex-teams task add, task claim, task complete, task fail, and task reopen. Use codex-teams note add for shared observations.
+5. Spawn only independent tasks concurrently. Join with wait. If a member fails, close it and reopen its claimed task: codex-teams task reopen golden <task-id> --actor leader.
 6. Treat each member's final TEAM-RESULT line as the canonical result. Artifact files are optional supporting evidence for workspace-write members.
 7. Integrate and verify the final answer yourself. Finish with: codex-teams state finish golden --status ok or --status partial.
 

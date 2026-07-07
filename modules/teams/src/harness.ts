@@ -63,8 +63,8 @@ export const nativeV1Harness: HarnessProfile = {
     leaderStateContract: (team, goal) => [
       `2. Start durable state before spawning: codex-teams state init ${team.name} --goal ${shellQuote(goal)}`,
       `3. After each spawn, record the returned agent id: codex-teams member bind ${team.name} <member> --agent-id <id> --nickname <nick>`,
-      "4. Track work with codex-teams task add, task claim, task complete, and task fail. Use codex-teams note add for shared observations.",
-      "5. Spawn only independent tasks concurrently. Join with wait. If a member fails, close it and return its claimed task to a safe state.",
+      "4. Track work with codex-teams task add, task claim, task complete, task fail, and task reopen. Use codex-teams note add for shared observations.",
+      `5. Spawn only independent tasks concurrently. Join with wait. If a member fails, close it and reopen its claimed task: codex-teams task reopen ${team.name} <task-id> --actor leader.`,
       "6. Treat each member's final TEAM-RESULT line as the canonical result. Artifact files are optional supporting evidence for workspace-write members.",
       `7. Integrate and verify the final answer yourself. Finish with: codex-teams state finish ${team.name} --status ok or --status partial.`,
     ],
@@ -73,7 +73,7 @@ export const nativeV1Harness: HarnessProfile = {
 3. Load the native multi-agent tools with tool_search. Use stable multi_agent_v1.spawn_agent, wait, close, resume, and send_input only.
 4. Start durable state with codex-teams state init <team> --goal "<goal>" before spawning members.
 5. After each spawn, record the returned id with codex-teams member bind <team> <member> --agent-id <id> --nickname <nick>.
-6. Use codex-teams task add/claim/complete/fail and codex-teams note add/list for leader-owned state. Members should report through their final TEAM-RESULT line.
+6. Use codex-teams task add/claim/complete/fail/reopen and codex-teams note add/list for leader-owned state. Members should report through their final TEAM-RESULT line.
 7. Use wait to collect member results, inspect any optional artifacts, and integrate the final answer yourself.
 8. Finish with codex-teams state finish <team> --status ok or --status partial.
 

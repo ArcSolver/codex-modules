@@ -68,7 +68,12 @@ codex-teams leader-prompt team.json --goal "Review this change for security and 
 codex-teams state init review-panel --goal "Review this change"
 codex-teams task add review-panel --title "Security review"
 codex-teams task claim review-panel task-001 --actor security
+codex-teams task complete review-panel task-001 --actor security --result "No blocking issues" --meta '{"severity":"low"}'
+codex-teams task add review-panel --title "Retry flaky check"
+codex-teams task claim review-panel task-002 --actor security
+codex-teams task reopen review-panel task-002 --actor leader
 codex-teams note add review-panel --actor leader --text "Security and correctness can run in parallel"
+codex-teams note add review-panel --actor leader --task task-001 --text "Follow up on auth edge cases"
 ```
 
 `run`은 기본적으로 dry-run입니다:
@@ -124,7 +129,7 @@ Install은 각 member를 다음 필드가 있는 TOML로 렌더합니다:
   locks/
 ```
 
-`state.json`과 `tasks.json`은 mkdir lock 안에서 atomic write로 저장됩니다. `journal.jsonl`은 같은 lock 안에서 append-only로 추가됩니다. Task claim은 lease를 사용하며, 만료된 claim은 `task claim`과 `task list --reclaim`에서 회수됩니다. 결정론적 테스트에는 `CODEX_TEAMS_NOW`로 시간을 override할 수 있습니다.
+`state.json`과 `tasks.json`은 mkdir lock 안에서 atomic write로 저장됩니다. `journal.jsonl`은 같은 lock 안에서 append-only로 추가됩니다. Task claim은 lease를 사용하며, 만료된 claim은 `task claim`과 `task list --reclaim`에서 회수됩니다. Claimed task는 `task reopen`으로 open 상태로 되돌릴 수 있고, done/failed task는 terminal입니다. `task complete --meta <json>`은 선택적 구조화 결과 metadata를 저장하고, `note add/list --task <task-id>`는 task-scoped note를 기록하고 필터링합니다. 결정론적 테스트에는 `CODEX_TEAMS_NOW`로 시간을 override할 수 있습니다.
 
 상태 CLI는 리더 또는 사람이 호출하는 표면입니다. 멤버는 마지막 `TEAM-RESULT: <one-line summary>` 줄로 보고합니다. Workspace-write 멤버는 선택적으로 artifact를 남길 수 있지만, canonical 결과 채널은 final message입니다.
 

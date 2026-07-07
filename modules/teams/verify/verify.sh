@@ -243,6 +243,54 @@ CODEX_TEAMS_NOW="2026-01-01T00:01:30.000Z" run task complete review-panel "$TASK
 CODEX_TEAMS_NOW="2026-01-01T00:02:00.000Z" run task claim review-panel "$TASK_B" --actor correctness --lease-sec 60 >/tmp/codex-teams-claim-b.json
 pass "task dependency gate and completion flow"
 
+"$NODE_BIN" -e 'const f=require("fs");const t=JSON.parse(f.readFileSync(process.argv[1],"utf8"));if(Object.prototype.hasOwnProperty.call(t,"result_meta"))process.exit(1)' /tmp/codex-teams-complete-a.json || fail "meta-less complete wrote result_meta"
+pass "complete without meta omits result_meta"
+
+TASK_META_OBJECT="$(run task add review-panel --title "meta object" | "$NODE_BIN" -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).id))')"
+run task claim review-panel "$TASK_META_OBJECT" --actor security >/tmp/codex-teams-meta-object-claim.json
+run task complete review-panel "$TASK_META_OBJECT" --actor security --result "object" --meta '{"nested":{"arr":[1,{"ok":true}]},"tags":["a","b"]}' >/tmp/codex-teams-meta-object-complete.json
+run task list review-panel --json >/tmp/codex-teams-meta-object-list.json
+"$NODE_BIN" -e 'const f=require("fs");const data=JSON.parse(f.readFileSync(process.argv[1],"utf8"));const t=data.tasks.find(x=>x.id===process.argv[2]);if(!t||t.result_meta?.nested?.arr?.[1]?.ok!==true||t.result_meta.tags?.[1]!=="b")process.exit(1)' /tmp/codex-teams-meta-object-list.json "$TASK_META_OBJECT" || fail "nested result_meta did not round-trip"
+pass "complete meta preserves nested object and array"
+
+META_STRING="$("$NODE_BIN" -e 'process.stdout.write(JSON.stringify("quote \" backslash \\\\ newline\nend"))')"
+TASK_META_STRING="$(run task add review-panel --title "meta string" | "$NODE_BIN" -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).id))')"
+run task claim review-panel "$TASK_META_STRING" --actor security >/tmp/codex-teams-meta-string-claim.json
+run task complete review-panel "$TASK_META_STRING" --actor security --result "string" --meta "$META_STRING" >/tmp/codex-teams-meta-string-complete.json
+"$NODE_BIN" -e 'const f=require("fs");const t=JSON.parse(f.readFileSync(process.argv[1],"utf8"));if(t.result_meta!=="quote \" backslash \\\\ newline\nend")process.exit(1)' /tmp/codex-teams-meta-string-complete.json || fail "string result_meta did not preserve escapes"
+pass "complete meta preserves quotes backslashes and newline"
+
+META_UNICODE="$("$NODE_BIN" -e 'process.stdout.write(JSON.stringify("\uD55C\uAE00 \u{1F600}"))')"
+TASK_META_UNICODE="$(run task add review-panel --title "meta unicode" | "$NODE_BIN" -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).id))')"
+run task claim review-panel "$TASK_META_UNICODE" --actor security >/tmp/codex-teams-meta-unicode-claim.json
+run task complete review-panel "$TASK_META_UNICODE" --actor security --result "unicode" --meta "$META_UNICODE" >/tmp/codex-teams-meta-unicode-complete.json
+"$NODE_BIN" -e 'const f=require("fs");const t=JSON.parse(f.readFileSync(process.argv[1],"utf8"));if(t.result_meta!=="\uD55C\uAE00 \u{1F600}")process.exit(1)' /tmp/codex-teams-meta-unicode-complete.json || fail "unicode result_meta did not round-trip"
+pass "complete meta preserves unicode"
+
+TASK_META_INVALID="$(run task add review-panel --title "meta invalid" | "$NODE_BIN" -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).id))')"
+run task claim review-panel "$TASK_META_INVALID" --actor security >/tmp/codex-teams-meta-invalid-claim.json
+set +e
+run task complete review-panel "$TASK_META_INVALID" --actor security --meta '{"bad":' >/tmp/codex-teams-meta-invalid.out 2>&1
+META_INVALID_STATUS=$?
+set -e
+if [[ "$META_INVALID_STATUS" -eq 0 ]]; then
+  fail "invalid meta JSON unexpectedly succeeded"
+fi
+assert_grep /tmp/codex-teams-meta-invalid.out "--meta must be valid JSON"
+pass "complete rejects invalid meta JSON"
+
+TASK_META_SCALAR="$(run task add review-panel --title "meta scalar" | "$NODE_BIN" -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).id))')"
+run task claim review-panel "$TASK_META_SCALAR" --actor security >/tmp/codex-teams-meta-scalar-claim.json
+run task complete review-panel "$TASK_META_SCALAR" --actor security --result "scalar" --meta 42 >/tmp/codex-teams-meta-scalar-complete.json
+"$NODE_BIN" -e 'const f=require("fs");const t=JSON.parse(f.readFileSync(process.argv[1],"utf8"));if(t.result_meta!==42)process.exit(1)' /tmp/codex-teams-meta-scalar-complete.json || fail "scalar result_meta was not accepted"
+pass "complete meta accepts scalar JSON"
+
+TASK_META_DASH="$(run task add review-panel --title "meta dash" | "$NODE_BIN" -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).id))')"
+run task claim review-panel "$TASK_META_DASH" --actor security >/tmp/codex-teams-meta-dash-claim.json
+run task complete review-panel "$TASK_META_DASH" --actor security --result "dash" --meta '"--flag"' >/tmp/codex-teams-meta-dash-complete.json
+"$NODE_BIN" -e 'const f=require("fs");const t=JSON.parse(f.readFileSync(process.argv[1],"utf8"));if(t.result_meta!=="--flag")process.exit(1)' /tmp/codex-teams-meta-dash-complete.json || fail "dash-prefixed result_meta was parsed as a flag"
+pass "complete meta consumes dash-prefixed JSON string as value"
+
 TASK_C="$(run task add review-panel --title "lease" | "$NODE_BIN" -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).id))')"
 CODEX_TEAMS_NOW="2026-01-01T00:03:00.000Z" run task claim review-panel "$TASK_C" --actor security --lease-sec 1 >/tmp/codex-teams-claim-c.json
 CODEX_TEAMS_NOW="2026-01-01T00:03:02.000Z" run task list review-panel --json --reclaim >/tmp/codex-teams-reclaim.json
@@ -266,14 +314,117 @@ pass "concurrent claim single winner"
 run note add review-panel --actor security --kind decision --text "ship it carefully" >/tmp/codex-teams-note.json
 run note list review-panel --json >/tmp/codex-teams-notes.json
 assert_grep /tmp/codex-teams-notes.json "ship it carefully"
+run note list review-panel >/tmp/codex-teams-notes.txt
+assert_grep /tmp/codex-teams-notes.txt "ship it carefully"
+pass "legacy unscoped notes render in text and json"
+
+TASK_NOTE_OTHER="$(run task add review-panel --title "note other" | "$NODE_BIN" -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).id))')"
+run note add review-panel --actor security --task "$TASK_B" --kind handoff --text "task scoped note" >/tmp/codex-teams-task-note.json
+run note add review-panel --actor correctness --task "$TASK_NOTE_OTHER" --text "other task note" >/tmp/codex-teams-other-task-note.json
+"$NODE_BIN" -e 'const f=require("fs");const n=JSON.parse(f.readFileSync(process.argv[1],"utf8"));if(n.task_id!==process.argv[2])process.exit(1)' /tmp/codex-teams-task-note.json "$TASK_B" || fail "task-scoped note did not store task_id"
+run note list review-panel --json --task "$TASK_B" >/tmp/codex-teams-task-notes-filtered.json
+"$NODE_BIN" -e 'const f=require("fs");const notes=JSON.parse(f.readFileSync(process.argv[1],"utf8"));if(notes.length!==1||notes[0].text!=="task scoped note"||notes[0].task_id!==process.argv[2])process.exit(1)' /tmp/codex-teams-task-notes-filtered.json "$TASK_B" || fail "task note filter did not isolate task notes"
+set +e
+run note add review-panel --actor security --task task-missing --text "bad task" >/tmp/codex-teams-task-note-missing.out 2>&1
+TASK_NOTE_MISSING_STATUS=$?
+set -e
+if [[ "$TASK_NOTE_MISSING_STATUS" -eq 0 ]]; then
+  fail "note add accepted unknown task id"
+fi
+assert_grep /tmp/codex-teams-task-note-missing.out "unknown task for note: task-missing"
+run note list review-panel --json >/tmp/codex-teams-task-notes-all.json
+"$NODE_BIN" -e 'const f=require("fs");const all=JSON.parse(f.readFileSync(process.argv[1],"utf8"));const filtered=JSON.parse(f.readFileSync(process.argv[2],"utf8"));if(all.length<=filtered.length||!all.some(n=>n.text==="ship it carefully"&&!("task_id" in n))||!all.some(n=>n.text==="other task note"))process.exit(1)' /tmp/codex-teams-task-notes-all.json /tmp/codex-teams-task-notes-filtered.json || fail "filtered and unfiltered note lists were not distinct"
+pass "task-scoped notes store validate and filter by task"
 run state show review-panel --json >/tmp/codex-teams-state-show.json
 assert_grep /tmp/codex-teams-state-show.json '"team": "review-panel"'
 pass "note journal and state show json"
+
+TASK_REOPEN="$(run task add review-panel --title "reopen claimed" | "$NODE_BIN" -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).id))')"
+run task claim review-panel "$TASK_REOPEN" --actor security --lease-sec 60 >/tmp/codex-teams-reopen-claim.json
+run task reopen review-panel "$TASK_REOPEN" --actor leader >/tmp/codex-teams-reopen.json
+"$NODE_BIN" -e 'const f=require("fs");const t=JSON.parse(f.readFileSync(process.argv[1],"utf8"));if(t.status!=="open"||"claimed_by" in t||"lease_expires_at" in t)process.exit(1)' /tmp/codex-teams-reopen.json || fail "reopen did not clear claim"
+run task claim review-panel "$TASK_REOPEN" --actor correctness --lease-sec 60 >/tmp/codex-teams-reclaim-after-reopen.json
+pass "reopen returns claimed task to open and allows reclaim"
+
+TASK_REOPEN_OPEN="$(run task add review-panel --title "reopen open" | "$NODE_BIN" -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).id))')"
+set +e
+run task reopen review-panel "$TASK_REOPEN_OPEN" --actor leader >/tmp/codex-teams-reopen-open.out 2>&1
+REOPEN_OPEN_STATUS=$?
+set -e
+if [[ "$REOPEN_OPEN_STATUS" -eq 0 ]]; then
+  fail "reopen accepted open task"
+fi
+assert_grep /tmp/codex-teams-reopen-open.out "already open; only claimed tasks can be reopened"
+
+TASK_REOPEN_DONE="$(run task add review-panel --title "reopen done" | "$NODE_BIN" -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).id))')"
+run task claim review-panel "$TASK_REOPEN_DONE" --actor security >/tmp/codex-teams-reopen-done-claim.json
+run task complete review-panel "$TASK_REOPEN_DONE" --actor security >/tmp/codex-teams-reopen-done-complete.json
+set +e
+run task reopen review-panel "$TASK_REOPEN_DONE" --actor leader >/tmp/codex-teams-reopen-done.out 2>&1
+REOPEN_DONE_STATUS=$?
+set -e
+if [[ "$REOPEN_DONE_STATUS" -eq 0 ]]; then
+  fail "reopen accepted done task"
+fi
+assert_grep /tmp/codex-teams-reopen-done.out "is done; only claimed tasks can be reopened"
+
+TASK_REOPEN_FAILED="$(run task add review-panel --title "reopen failed" | "$NODE_BIN" -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).id))')"
+run task claim review-panel "$TASK_REOPEN_FAILED" --actor security >/tmp/codex-teams-reopen-failed-claim.json
+run task fail review-panel "$TASK_REOPEN_FAILED" --actor security --result "failed" >/tmp/codex-teams-reopen-failed-fail.json
+set +e
+run task reopen review-panel "$TASK_REOPEN_FAILED" --actor leader >/tmp/codex-teams-reopen-failed.out 2>&1
+REOPEN_FAILED_STATUS=$?
+set -e
+if [[ "$REOPEN_FAILED_STATUS" -eq 0 ]]; then
+  fail "reopen accepted failed task"
+fi
+assert_grep /tmp/codex-teams-reopen-failed.out "is failed; only claimed tasks can be reopened"
+pass "reopen rejects open done and failed tasks"
+
+mkdir -p "$PROJECT/.codex-teams/legacy/locks"
+cat >"$PROJECT/.codex-teams/legacy/tasks.json" <<'JSON'
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": "task-001",
+      "title": "old open",
+      "depends_on": [],
+      "status": "open",
+      "created_at": "2025-12-31T00:00:00.000Z",
+      "updated_at": "2025-12-31T00:00:00.000Z"
+    },
+    {
+      "id": "task-002",
+      "title": "old claimed",
+      "depends_on": [],
+      "status": "claimed",
+      "claimed_by": "alpha",
+      "lease_expires_at": "2026-01-01T00:10:00.000Z",
+      "created_at": "2025-12-31T00:00:00.000Z",
+      "updated_at": "2025-12-31T00:00:00.000Z"
+    }
+  ]
+}
+JSON
+cat >"$PROJECT/.codex-teams/legacy/journal.jsonl" <<'JSONL'
+{"ts":"2025-12-31T00:00:00.000Z","actor":"alpha","kind":"note","text":"old note without task id"}
+JSONL
+run task list legacy --json >/tmp/codex-teams-legacy-tasks.json
+run task complete legacy task-002 --actor alpha --result "legacy done" >/tmp/codex-teams-legacy-complete.json
+"$NODE_BIN" -e 'const f=require("fs");const listed=JSON.parse(f.readFileSync(process.argv[1],"utf8"));const done=JSON.parse(f.readFileSync(process.argv[2],"utf8"));if(listed.tasks.length!==2||done.status!=="done"||Object.prototype.hasOwnProperty.call(done,"result_meta"))process.exit(1)' /tmp/codex-teams-legacy-tasks.json /tmp/codex-teams-legacy-complete.json || fail "legacy task schema was not readable or completable"
+pass "old task schema reads and completes"
+run note list legacy --json >/tmp/codex-teams-legacy-notes.json
+run note list legacy >/tmp/codex-teams-legacy-notes.txt
+assert_grep /tmp/codex-teams-legacy-notes.json "old note without task id"
+assert_grep /tmp/codex-teams-legacy-notes.txt "old note without task id"
+pass "old journal schema reads in json and text"
 
 run leader-prompt team.json --goal "verify goal" >/tmp/codex-teams-leader.txt
 assert_grep /tmp/codex-teams-leader.txt "tool_search"
 assert_grep /tmp/codex-teams-leader.txt "TEAM-RESULT"
 assert_grep /tmp/codex-teams-leader.txt "multi_agent_v1.spawn_agent"
+assert_grep /tmp/codex-teams-leader.txt "codex-teams task reopen review-panel <task-id> --actor leader"
 pass "leader prompt includes roster and native tool contract"
 
 run run team.json --goal "verify goal" >/tmp/codex-teams-dry-run.txt
@@ -353,7 +504,7 @@ pass "project roots reject symlink escape"
 [[ ! -d "$ROOT/src/kit" ]] || fail "src/kit still exists"
 [[ ! -d "$ROOT/dist/kit" ]] || fail "dist/kit still exists"
 "$NODE_BIN" -e 'const f=require("fs");const p=JSON.parse(f.readFileSync(process.argv[1],"utf8"));if(Object.keys(p.dependencies||{}).length!==0)process.exit(1)' "$ROOT/package.json" || fail "runtime dependencies are not empty"
-"$NODE_BIN" --input-type=module -e 'const {pathToFileURL}=await import("node:url");const mod=await import(pathToFileURL(process.argv[1]).href);for(const key of ["installTeam","uninstallTeam","renderAgentToml","listInstalledTeams","resolveAgentsRoot","doctor","doctorIsHealthy","assembleLeaderPrompt","buildRunPlan","runTeam","nativeV1Harness","initState","addTask","claimTask","addNote","parseTeamJson","validateTeamDef"])if(!(key in mod))process.exit(1);for(const key of ["acquireMkdirLock","withLock","renderToml","tomlBasicString","buildCodexArgv"])if(key in mod)process.exit(1)' "$ROOT/dist/index.js" || fail "public exports do not match supported surface"
+"$NODE_BIN" --input-type=module -e 'const {pathToFileURL}=await import("node:url");const mod=await import(pathToFileURL(process.argv[1]).href);for(const key of ["installTeam","uninstallTeam","renderAgentToml","listInstalledTeams","resolveAgentsRoot","doctor","doctorIsHealthy","assembleLeaderPrompt","buildRunPlan","runTeam","nativeV1Harness","initState","addTask","claimTask","reopenTask","addNote","parseTeamJson","validateTeamDef"])if(!(key in mod))process.exit(1);for(const key of ["acquireMkdirLock","withLock","renderToml","tomlBasicString","buildCodexArgv"])if(key in mod)process.exit(1)' "$ROOT/dist/index.js" || fail "public exports do not match supported surface"
 pass "kit code removed and public exports narrowed"
 
 mkdir -p "$TMP/no-bin"

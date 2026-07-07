@@ -28,5 +28,5 @@ export { doctor, doctorIsHealthy, formatDoctor } from "./doctor.js";
 export { nativeV1Harness } from "./harness.js";
 export { assembleLeaderPrompt } from "./prompt.js";
 export { buildRunPlan, runTeam } from "./runner.js";
-export { addNote, addTask, bindMember, claimTask, completeTask, finishState, initState, listNotes, listTasks, showState } from "./state.js";
+export { addNote, addTask, bindMember, claimTask, completeTask, finishState, initState, listNotes, listTasks, reopenTask, showState } from "./state.js";
 export { parseTeamJson, scaffoldTeam, validateTeamDef, writePreset } from "./team.js";

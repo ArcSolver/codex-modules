@@ -56,6 +56,7 @@ export type TaskRecord = {
   claimed_by?: string;
   lease_expires_at?: string;
   result?: string;
+  result_meta?: unknown;
   created_at: string;
   updated_at: string;
 };
@@ -70,6 +71,7 @@ export type JournalEntry = {
   actor: string;
   kind: JournalKind;
   text: string;
+  task_id?: string;
 };
 
 export type ManifestEntry = {
