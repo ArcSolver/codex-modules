@@ -22,6 +22,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: Install Codex Linux sandbox dependency
+        run: sudo apt-get update && sudo apt-get install -y bubblewrap
+
       - name: Cache Codex testbed
         uses: actions/cache@v4
         with:
