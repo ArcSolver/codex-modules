@@ -7,6 +7,7 @@ All notable changes to this module are documented here.
 ### Changed
 
 - Raised the minimum supported Node.js version to `>=24` (current Active LTS); Node 20 reached end-of-life in April 2026.
+- Normalize strict Codex fields across the full merged catalog so newer server cache entries remain readable when used as an external catalog by supported Codex CLI versions.
 
 ## [0.1.0] - 2026-07-06
 

@@ -71,6 +71,10 @@ function unique(values: string[]): string[] {
   return [...new Set(values.filter(Boolean))];
 }
 
+function cloneCatalogEntry(entry: RawEntry): RawEntry {
+  return JSON.parse(JSON.stringify(entry)) as RawEntry;
+}
+
 function codexCommandCandidates(): string[] {
   const envPath = process.env.CODEX_CLI_PATH?.trim();
   const candidates = envPath ? [envPath] : [];
@@ -204,7 +208,7 @@ export function routedSlug(providerId: string, modelSlug: string): string {
 
 export function deriveCustomEntry(template: RawEntry, providerId: string, providerName: string | undefined, model: CustomModelSpec): RawEntry {
   const slug = routedSlug(providerId, model.slug);
-  const entry = JSON.parse(JSON.stringify(template)) as RawEntry;
+  const entry = cloneCatalogEntry(template);
   entry.slug = slug;
   entry.display_name = model.displayName ?? slug;
   entry.description = model.description ?? `Registered by codex-custom-models via ${providerName ?? providerId}.`;
@@ -229,7 +233,8 @@ export function mergeCustomEntries(baseCatalog: RawCatalog, ownedSlugsForProvide
     if (typeof entry.slug === "string") remove.add(entry.slug);
   }
   const kept = baseCatalog.models.filter(entry => !(typeof entry.slug === "string" && remove.has(entry.slug)));
-  return { ...baseCatalog, models: [...kept, ...entries] };
+  const models = [...kept, ...entries].map(entry => ensureStrictCatalogFields(cloneCatalogEntry(entry)));
+  return { ...baseCatalog, models };
 }
 
 export function removeCatalogSlugs(catalog: RawCatalog, slugs: string[]): { catalog: RawCatalog; removed: string[] } {
@@ -263,4 +268,3 @@ export function isDefaultModuleCatalogPath(codexHome: string, path: string): boo
 export function resolveCatalogPath(codexHome: string, requested?: string): string {
   return requested ? resolve(codexHome, requested) : defaultCatalogPath(codexHome);
 }
-

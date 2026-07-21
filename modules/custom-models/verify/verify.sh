@@ -52,6 +52,10 @@ assert.ok(existsSync(catalogPath), "catalog exists");
 const catalog = JSON.parse(readFileSync(catalogPath, "utf8"));
 const entry = catalog.models.find((model) => model.slug === "openrouter/anthropic/claude-sonnet-4.6");
 assert.ok(entry, "custom entry exists");
+for (const model of catalog.models) {
+  assert.equal(typeof model.supports_reasoning_summaries, "boolean", `${model.slug} reasoning summaries field`);
+  assert.equal(typeof model.comp_hash, "string", `${model.slug} comp hash field`);
+}
 assert.equal(entry.shell_type, "shell_command");
 assert.equal(entry.supported_in_api, true);
 assert.ok(entry.base_instructions.includes("anthropic/claude-sonnet-4.6"));
@@ -84,7 +88,7 @@ assert.equal(cache.fetched_at, "2000-01-01T00:00:00Z");
 assert.equal(cache.client_version, "0.0.0");
 assert.ok(cache.models.some((model) => model.slug === "openrouter/anthropic/claude-sonnet-4.6"));
 NODE
-pass "add writes root-safe config, cloned catalog entry, backup, and expired cache"
+pass "add normalizes the catalog and writes root-safe config, backup, and expired cache"
 
 LIST_OUTPUT="$(node "$CLI" list --codex-home "$HOME_ONE")"
 [[ "$LIST_OUTPUT" == *"openrouter/anthropic/claude-sonnet-4.6"* ]] || fail "list shows registered model"
@@ -162,4 +166,3 @@ pass "force allows registration with pre-existing root model_provider"
 DOCTOR_JSON="$(node "$CLI" doctor --codex-home "$HOME_TWO" --json)"
 [[ "$DOCTOR_JSON" == *'"ok": true'* ]] || fail "doctor reports ok"
 pass "doctor reports ok for sandbox registration"
-
