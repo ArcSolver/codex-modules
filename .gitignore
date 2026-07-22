@@ -1,6 +1,7 @@
 AGENTS.md
 .work/
 .claude/
+.codex-teams/
 node_modules/
 dist/
 *.log
